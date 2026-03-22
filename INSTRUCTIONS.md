@@ -2,7 +2,12 @@
 
 ## 📚 Initial Instructions for Students
 
-This repository is the official starting point for all course projects. Here are the steps to get started:
+This repository is the official starting point for all course projects. ### 📏 Note on Project Sizes & Group Dynamics
+The "Suggested Size" (Small, Medium, Large) is a rough estimate of the workload, mapping approximately to group sizes of 1, 2, and 3 members. However, these are just recommendations! 
+- A 3-person group selecting a "Small" project will be expected to complete all **Extra Objectives** and demonstrate a higher level of polish and depth. 
+- Conversely, a solo student who ambitiously selects a "Large" project will be evaluated with adapted expectations regarding the breadth of completed tasks.
+
+Here are the steps to get started:
 1. **Choose a project**: Consult the [project list below](#project-list) to read the available tracks and check which ones are free or already assigned. Then communicate your chosen project to the professor via email.
 2. **Fork**: Create a **fork** of this repository in your personal GitHub account. While it is preferable to use the Fork button in the top right (to keep the history visible for evaluation), you can also create a standalone repository and keep it private if you prefer.
 3. **Clone**: Clone your fork locally.
@@ -17,146 +22,185 @@ This file contains the list of available projects, complete details for each pro
 
 ## Project List
 
-| ID | Title | Module | Difficulty | Assigned |
-| :---: | :--- | :--- | :--- | :--- |
-| 3 | [Metric Learning for Egocentric Face Recognition](#traccia-3) | Metric Learning | Beginner | Free |
-| 4 | [Few-shot Learning for Gesture Recognition](#traccia-4) | Metric Learning | Intermediate | Free |
-| 5 | [Graph-based Metric Learning for Scene Understanding](#traccia-5) | Metric Learning | Advanced | Free |
-| 6 | [Knowledge Distillation for Mobile Action Recognition](#traccia-6) | Knowledge Distillation | Beginner | Free |
-| 7 | [Domain Adaptation for Action Recognition – Egocentric → Exocentric](#traccia-7) | Domain Adaptation | Intermediate | Free |
-| 8 | [Domain Adaptation with Image-to-Image Translation (CycleGAN)](#traccia-8) | Domain Adaptation | Intermediate | Free |
-| 9 | [Multi-source Domain Adaptation for Action Recognition](#traccia-9) | Domain Adaptation | Advanced | Free |
-| 10 | [Contrastive Learning for Video Representation (SimCLR Video)](#traccia-10) | Self-Supervised Learning | Beginner | Free |
-| 11 | [Masked Video Modeling (MAE-style) for Egocentric Video](#traccia-11) | Self-Supervised Learning | Intermediate | Free |
-| 12 | [Clustering-based Self-Supervised Learning for Action Discovery](#traccia-12) | Self-Supervised Learning | Intermediate | Free |
-| 13 | [Temporal Action Localization with 1D CNN](#traccia-13) | Video Understanding | Beginner | Free |
-| 14 | [Action Recognition with Vision Transformer (ViT-based)](#traccia-14) | Video Understanding | Intermediate | Free |
-| 15 | [Vision-Language Alignment with CLIP for Video](#traccia-15) | Vision & Language | Intermediate | Free |
-| 16 | [Multimodal Action Recognition – Video + Audio + Text](#traccia-16) | Vision & Language | Advanced | Free |
-| 17 | [Egocentric Video + Gaze for Procedural Understanding](#traccia-17) | Video Understanding | Intermediate | Free |
-| 18 | [State-Space Models (Mamba) for Long Sequences](#traccia-18) | Advanced Sequential Modeling | Advanced | Free |
-| 19 | [Transformer vs RNN for Procedural Video Understanding](#traccia-19) | Advanced Sequential Modeling | Intermediate | Free |
-| 20 | [Diffusion Models for Trajectory/Motion Generation](#traccia-20) | Advanced Sequential Modeling | Intermediate | Free |
-| 21 | [Deep Q-Learning for Frame Selection in Video](#traccia-21) | Reinforcement Learning | Beginner | Free |
-| 22 | [Policy Gradient for Gesture Control](#traccia-22) | Reinforcement Learning | Intermediate | Free |
-| 23 | [Multi-agent RL for Task Coordination](#traccia-23) | Reinforcement Learning | Advanced | Free |
-| 24 | [Differentiable Task Graphs (Yao method) – Group A](#traccia-24) | Research Topic (Graphs/Procedural) | Advanced | Free |
-| 25 | [Task Graphs – Softmax vs Sum Feasibility – Group B](#traccia-25) | Research Topic (Graphs/Procedural) | Advanced | Free |
-| 26 | [Procedural Error Detection with Gaze – Group A](#traccia-26) | Research Topic (Egocentric/Multimodal) | Intermediate | Free |
-| 27 | [Error Detection – Progress-Aware Model – Group B](#traccia-27) | Research Topic (Egocentric/Multimodal) | Intermediate | Free |
-| 28 | [Graph Autoencoder for Geometric Representations](#traccia-28) | Research Topic (Graphs/Representation) | Advanced | Free |
-| 29 | [Hyperbolic Embeddings for Action Hierarchy](#traccia-29) | Research Topic (Advanced Representations) | Intermediate | Free |
-| 30 | [Generative Models for Data Augmentation in Egocentric Domain](#traccia-30) | Research Topic (Egocentric/Generative) | Intermediate | Free |
-| 31 | [Online Episodic Memory for Action Anticipation](#traccia-31) | Research Topic (Memory/Anticipation) | Advanced | Free |
+<!-- | ID | Title | Reference Module | Suggested Size | Dataset | Assigned |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| 1 | [Feature-based Knowledge Distillation](#project-1) | Knowledge Distillation | Small | UCF-101 / HMDB-51 | Free |
+| 2 | [Cross-Modal Knowledge Distillation (Audio to Vision)](#project-2) | Knowledge Distillation | Medium | EPIC-Kitchens | Free |
+| 3 | [Metric Learning for Egocentric Face Recognition](#project-3) | Metric Learning | Small | EGTEA Gaze+ | Free |
+| 4 | [Few-shot Learning for Gesture Recognition](#project-4) | Metric Learning | Medium | miniImageNet | Free |
+| 5 | [Graph-based Metric Learning for Scene Understanding](#project-5) | Metric Learning | Large | Visual Genome | Free |
+| 6 | [Knowledge Distillation for Mobile Action Recognition](#project-6) | Knowledge Distillation | Small | HMDB-51 | Free |
+| 7 | [Domain Adaptation for Action Recognition – Egocentric → Exocentric](#project-7) | Domain Adaptation | Medium | Source (egocentric) | Free |
+| 8 | [Domain Adaptation with Image-to-Image Translation (CycleGAN)](#project-8) | Domain Adaptation | Medium | Office-31 | Free |
+| 9 | [Multi-source Domain Adaptation for Action Recognition](#project-9) | Domain Adaptation | Large | Source 1 | Free |
+| 10 | [Contrastive Learning for Video Representation (SimCLR Video)](#project-10) | Self-Supervised Learning | Small | Kinetics-400 | Free |
+| 11 | [Masked Video Modeling (MAE-style) for Egocentric Video](#project-11) | Self-Supervised Learning | Medium | EPIC-Kitchens | Free |
+| 12 | [Clustering-based Self-Supervised Learning for Action Discovery](#project-12) | Self-Supervised Learning | Medium | Unlabeled procedural videos (e.g., YouTube DIY, ~500 videos) | Free |
+| 13 | [Temporal Action Localization with 1D CNN](#project-13) | Video Understanding | Small | ActivityNet-1.3 | Free |
+| 14 | [Action Recognition with Vision Transformer (ViT-based)](#project-14) | Video Understanding | Medium | HMDB-51 | Free |
+| 15 | [Vision-Language Alignment with CLIP for Video](#project-15) | Vision & Language | Medium | MSR-VTT | Free |
+| 16 | [Multimodal Action Recognition – Video + Audio + Text](#project-16) | Vision & Language | Large | Synthetic (create your own videos with audio) or AudioSet + video | Free |
+| 17 | [Egocentric Video + Gaze for Procedural Understanding](#project-17) | Video Understanding | Medium | EPIC-Kitchens + gaze | Free |
+| 18 | [State-Space Models (Mamba) for Long Sequences](#project-18) | Advanced Sequential Modeling | Large | EPIC-Kitchens | Free |
+| 19 | [Transformer vs RNN for Procedural Video Understanding](#project-19) | Advanced Sequential Modeling | Medium | Assembly101 | Free |
+| 20 | [Diffusion Models for Trajectory/Motion Generation](#project-20) | Advanced Sequential Modeling | Medium | Human3.6M | Free |
+| 21 | [Deep Q-Learning for Frame Selection in Video](#project-21) | Reinforcement Learning | Small | Video classification task (e.g., HMDB-51, 100 videos) | Free |
+| 22 | [Policy Gradient for Gesture Control](#project-22) | Reinforcement Learning | Medium | Gesture dataset (e.g., MediaPipe skeleton of 5 common gestures) + Gymnasium environment (CartPole or GridWorld) | Free |
+| 23 | [Multi-agent RL for Task Coordination](#project-23) | Reinforcement Learning | Large | Synthetic: MultiAgentEnv environment based on Gymnasium | Free |
+| 24 | [Differentiable Task Graphs (Yao method) – Group A](#project-24) | Research Topic (Graphs/Procedural) | Large | Assembly101 | Free |
+| 25 | [Task Graphs – Softmax vs Sum Feasibility – Group B](#project-25) | Research Topic (Graphs/Procedural) | Large | Same as Track 24: Assembly101 | Free |
+| 26 | [Procedural Error Detection with Gaze – Group A](#project-26) | Research Topic (Egocentric/Multimodal) | Medium | EPIC-Kitchens | Free |
+| 27 | [Error Detection – Progress-Aware Model – Group B](#project-27) | Research Topic (Egocentric/Multimodal) | Medium | Same as Track 26 | Free |
+| 28 | [Graph Autoencoder for Geometric Representations](#project-28) | Research Topic (Graphs/Representation) | Large | Visual Genome | Free |
+| 29 | [Hyperbolic Embeddings for Action Hierarchy](#project-29) | Research Topic (Advanced Representations) | Medium | ActivityNet | Free |
+| 30 | [Generative Models for Data Augmentation in Egocentric Domain](#project-30) | Research Topic (Egocentric/Generative) | Medium | EPIC-Kitchens | Free |
+| 31 | [Online Episodic Memory for Action Anticipation](#project-31) | Research Topic (Memory/Anticipation) | Large | EPIC-Kitchens | Free |
 
----
+--- -->
 
 ## Detailed Project Descriptions
 
-<a id='traccia-3'></a>
-### Track 3: Metric Learning for Egocentric Face Recognition
-**Difficulty**: Beginner  
-**Module**: Metric Learning  
-**When to start**: After the Metric Learning lecture (24/03/26)
+
+<a id='project-1'></a>
+### Track 1: Metric Learning for Face Recognition
+**Suggested Size**: Small  
+**Reference Module**: Metric Learning  
 
 #### Problem Description
-Recognize faces seen from an egocentric perspective (e.g., in videos from smart glasses). The challenge is that faces are often partial, showing only eyes or profiles, and lighting conditions are extreme.
+Learn to recognize faces by training a model on a set of images of faces and testing it on a different set. Create a small demo working on images of faces collected by you.
 
 #### Dataset
-- **EGTEA Gaze+** (subset with annotated faces) or synthetic
-- ~100–200 identities, 5–10 samples per identity
-- Low resolution frames (egocentric ≈ 720p)
+- **CASIA-WebFace** (https://www.kaggle.com/datasets/debarghamitraroy/casia-webface) or a subset of it.
+- ~500,000 images of ~10,000 subjects.
 
 #### Minimum Objectives
 1. CNN backbone (ResNet-18 fine-tuned)
-2. Triplet loss with hard negative mining: given an anchor face, find positives (same person) and negatives (other people)
-3. Retrieval evaluation: mAP @1, 5, 10 (if I show a face, does the model retrieve the same person in the top-10 results more frequently?)
-4. Cluster analysis in latent space: are faces of the same person close together?
+2. Classification-based baseline, KNN generalization to new faces
+3. Mtric Learning: Triplet loss with hard negative mining: given an anchor face, find positives (same person) and negatives (other people)
+4. Retrieval evaluation: mAP @1, 5, 10 (if I show a face, does the model retrieve the same person in the top-10 results more frequently?)
+5. Cluster analysis in latent space: are faces of the same person close together?
 
 #### Extra Objectives
-- Comparison between triplet loss vs ArcFace (margin-based)
-- Sampling strategies for triplets (online mining vs offline)
-- Robustness to glasses/masks (add occlusion during tests)
+- Comparison with other losse functions (e.g., ArcFace, Siamese etc.).
+- Ablations of parameters (mining strategies, batch size, etc.)
 
 ---
 
-<a id='traccia-4'></a>
-### Track 4: Few-shot Learning for Gesture Recognition
-**Difficulty**: Intermediate  
-**Module**: Metric Learning  
-**When to start**: After the Metric Learning lecture (24/03/26)
+<a id='project-2'></a>
+### Track 2: Few-shot Learning for Gesture Recognition
+**Suggested Size**: Medium  
+**Reference Module**: Metric Learning  
 
 #### Problem Description
-Recognize gestures (hands or body) from the last 1–5 seen examples. This is useful when the gesture is rare or new.
+Recognize hand gestures from 1–5 labeled examples. This is useful when the gesture is rare or new. Train on a large dataset of gestures and test on a held-out set in a few-shot setting. Create a small demo with a few new gestures the model should generalize to.
 
 #### Dataset
-- **miniImageNet** adapted to 2D skeleton (or short gesture videos)
-- Or a DIY dataset: 10 gestures, 5–10 examples per gesture
-- Skeleton coordinates (e.g., from MediaPipe)
+- **HAGRID** (https://github.com/hukenovs/hagrid) (or a subset)
+- 1M RGB frames
+- 33 classes of gestures
 
-#### Minimum Objectives
-1. Feature encoder: 1D CNN on skeleton coordinates (or 2D CNN on gesture images)
-2. Prototypical Networks: calculate a prototype for each class (average of the support set embeddings)
-3. Query classification: compare query embedding with prototypes (L2 distance)
-4. Metric: Accuracy 5-way 1-shot, 5-way 5-shot
-5. Report: how does performance change with more examples?
+#### Objectives
+1. 2D/3D CNN / Transformers on gesture images, classification-based baseline, KNN for generalization to new classes.
+2. Metric learning: Triplet loss with hard negative mining: given an anchor, find positives (same gesture) and negatives (other gestures), linear probe for generalization to new classes.
+3. Metric: Accuracy 5-way 1-shot, 5-way 5-shot
+4. Report: how does performance change with more examples?
 
 #### Extra Objectives
-- Relation Networks (learn a distance metric instead of using L2 L2)
-- Domain adaptation: pre-train on one person's gestures, fine-tuning on another
-- Failure case analysis
+- 1D CNN/RNN/Transformer on skeleton coordinates (e.g., extracted with media-pipe)
+- Detailed failure case analysis
 
 ---
 
-<a id='traccia-5'></a>
-### Track 5: Graph-based Metric Learning for Scene Understanding
-**Difficulty**: Advanced  
-**Module**: Metric Learning  
-**When to start**: After the Metric Learning lecture (24/03/26) + deep dive
+<a id='project-3'></a>
+### Track 3: Graph-based Metric Learning for Scene Understanding
+**Suggested Size**: Large  
+**Reference Module**: Metric Learning  
 
 #### Problem Description
 Represent scenes (e.g., kitchen, office) as graphs (objects = nodes, spatial relations = edges) and learn robust embeddings for scene-to-scene retrieval.
 
 #### Dataset
-- **Visual Genome** (scene graphs: ~100k images with annotated objects and relations)
-- Subset: ~500 scenes with non-complex graphs (5–15 nodes)
+- **GQA** (https://cs.stanford.edu/people/dorarad/gqa/download.html) or a subset
+- 100K images
+- Each with scene graphs and a subset with scene labels (location)
 
 #### Minimum Objectives
-1. Scene graph encoder: GCN/GraphSAGE that processes the graph and produces an embedding
-2. Contrastive loss: pairs of similar scenes (same place, same activity) must have close embeddings
-3. Retrieval: given a query graph, find the most similar scene graphs in the dataset
-4. Metric: mAP on retrieval, cluster purity
+1. Scene graph encoder: GCN that processes the graph and produces an embedding. Work with ground truth graphs.
+2. Contrastive loss: pairs of similar scenes (same place, same activity) must have close embeddings (e.g., Triplet loss)
+3. Retrieval: given a query graph, find the most similar scene graphs in the dataset and attach the corresponding scene label
+4. Metrics: standard classification metrics (Accuracy etc.)
 
 #### Extra Objectives
-- Dynamic graph: extract scene graphs from videos (nodes = object tracks, edges = temporal interactions)
 - Robustness to perturbations (remove nodes/edges from the test graph, check if retrieval degrades)
+- Dynamic graph: extract scene graphs from videos (nodes = object tracks, edges = temporal interactions), e.g., using VLMs - evaluate the quality of the extracted graphs
 - Interpretability: which edges are critical for similarity?
 
 ---
 
-<a id='traccia-6'></a>
+<a id='project-4'></a>
+### Track 4: Feature-based Knowledge Distillation
+**Suggested Size**: Small  
+**Reference Module**: Knowledge Distillation  
+
+#### Problem Description
+Test different knowledge distillation strategies to train a small student model for image classification.
+
+#### Dataset
+- **CIFAR-100** or **ImageNet** (subset)
+
+#### Minimum Objectives
+1. **Teacher and Student**: Large CNN (e.g., ResNet-50) and Small CNN (e.g., ResNet-18)
+2. **Algorithm**: Implement Classic KD (logits) and FitNets (feature distillation)
+3. Compare student performance with and without distillation
+4. Metrics: Accuracy comparison (teacher vs student no KD vs student + KD), model size (MB), inference time (ms)
+
+#### Extra Objectives
+- Combine feature distillation and logit distillation
+- Try also Attention Transfer and Relational Knowledge Distillation
+
+---
+
+<a id='project-5'></a>
+### Track 5: Cross-Modal Knowledge Distillation (Audio to Vision)
+**Suggested Size**: Large  
+**Reference Module**: Knowledge Distillation  
+
+#### Problem Description
+Distill knowledge from a video-only teacher into an audio-only student model. This helps when video is not available during inference but is present during training.
+
+#### Dataset
+- **EPIC-Kitchens** (https://epic-kitchens.github.io/) and **EPIC-Sounds** (https://epic-kitchens.github.io/epic-sounds/)
+
+#### Minimum Objectives
+1. **Teacher model**: Train an image encoder (e.g. ResNet-50) on EPIC-Kitchens
+2. **Student model**: Train a audio encoder (e.g. Audio Spectrogram Transformer - https://arxiv.org/abs/2104.01778) on EPIC-Sounds using distillation loss from the video teacher
+3. Evaluate student's performance against a vision-only baseline
+4. Metrics: Accuracy comparison (teacher vs student no KD vs student + KD), model size (MB), inference time (ms)
+
+#### Extra Objectives
+- Implement contrastive distillation between audio and video embeddings
+- Use a video encoder (e.g. 3D CNNs/Transformer) on EPIC-Kitchens
+- Explore different audio encoders
+
+---
+
+<a id='project-6'></a>
 ### Track 6: Knowledge Distillation for Mobile Action Recognition
-**Difficulty**: Beginner  
-**Module**: Knowledge Distillation  
-**When to start**: After the Knowledge Distillation lecture (07/04/26)
+**Suggested Size**: Small  
+**Reference Module**: Knowledge Distillation  
 
 #### Problem Description
 Compress a heavy video model (e.g., 3D ResNet-50) into a lightweight one (e.g., MobileNet) maintaining performance, for deployment on mobile devices.
 
 #### Dataset
 - **HMDB-51** or **UCF-101** (sports/daily actions)
-- ~1000–2000 videos, 51 classes
 - Video features available online
 
 #### Minimum Objectives
 1. **Teacher**: Pre-trained 3D ResNet-50 (baseline accuracy on the test set)
 2. **Student**: MobileNet 3D (light version, e.g., 5–10x fewer parameters)
-3. **KD Loss**: L_KD = α * L_CE(student, hard_labels) + β * L_KL(student, teacher)
-4. Training loop: student learns from the soft output of the teacher
-5. Metrics:
-   - Accuracy comparison (teacher vs student no KD vs student + KD)
-   - Model size (MB)
-   - Inference time (ms)
+3. Training loop: student learns from the soft output of the teacher
+4. Metrics: Accuracy comparison (teacher vs student no KD vs student + KD), model size (MB), inference time (ms)
 
 #### Extra Objectives
 - Temperature tuning: how does performance change with T = 1, 5, 10, 20?
@@ -165,50 +209,47 @@ Compress a heavy video model (e.g., 3D ResNet-50) into a lightweight one (e.g., 
 
 ---
 
-<a id='traccia-7'></a>
-### Track 7: Domain Adaptation for Action Recognition – Egocentric → Exocentric
-**Difficulty**: Intermediate  
-**Module**: Domain Adaptation  
-**When to start**: After the Domain Adaptation lecture (16/04/26)
+<a id='project-7'></a>
+### Track 7: Domain Adaptation for Action Recognition – Exocentric → Egocentric
+**Suggested Size**: Medium  
+**Reference Module**: Domain Adaptation  
 
 #### Problem Description
-A model trained on egocentric videos (from smart glasses) does not work well on exocentric videos (third-person view). Use Domain Adaptation (DA) to transfer knowledge.
+A model trained on exocentric videos (fixed cameras) does not work well on egocentric videos (from smart glasses). Use Domain Adaptation (DA) to transfer knowledge. Use exocentric as source and egocentric as target.
 
 #### Dataset
-- **Source (egocentric)**: EPIC-Kitchens (~1000 videos)
-- **Target (exocentric)**: Kinetics subset (~500 similar videos, e.g., "chopping")
-- Mapping: select 20–30 common actions
+- **Assembly101** (https://assembly101.github.io/)
+- Multi-view: pick one as exo and one as ego
+- May use a subset
 
 #### Minimum Objectives
-1. **Baseline fine-tuning**: train on target, evaluate accuracy
+1. **Baseline fine-tuning**: train on labeled target (egocentric), evaluate accuracy
 2. **Adversarial DA**: gradient reversal layer
    - Shared encoder (CNN)
    - Classification head (predicts action on target)
    - Domain discriminator (predicts if egocentric=0 or exocentric=1)
    - Backprop: loss_class - λ*loss_domain (adversarial)
-3. Metrics: target accuracy, domain discriminator loss
+3. Metrics: target accuracy, standard classification metrics
 4. Report: does the model manage to confuse the discriminator? Does accuracy improve with DA vs fine-tuning?
 
 #### Extra Objectives
-- Maximum Mean Discrepancy (MMD) loss
+- Maximum Mean Discrepancy (MMD) loss and other domain adaptation methods
 - Visualization of feature alignment (t-SNE source vs target)
 - Per-class analysis: which actions are easy/difficult to adapt?
 
 ---
 
-<a id='traccia-8'></a>
+<a id='project-8'></a>
 ### Track 8: Domain Adaptation with Image-to-Image Translation (CycleGAN)
-**Difficulty**: Intermediate  
-**Module**: Domain Adaptation  
-**When to start**: After the Domain Adaptation lecture (16/04/26)
+**Suggested Size**: Medium  
+**Reference Module**: Domain Adaptation  
 
 #### Problem Description
 Translate images from domain A to domain B without aligned pairs (e.g., sketch → photo). Use the translation as pre-processing to improve the classifier on the target.
 
 #### Dataset
-- **Office-31** (source: Amazon, target: DSLR)
-- Or **VisDA** (syn → real)
-- Alternative: your own data with two natural domains
+- **Office-31** (source: Amazon, target: DSLR) (https://www.kaggle.com/datasets/xixuhu/office31)
+- Or **VisDA** (syn → real) (https://ai.bu.edu/visda-2019/)
 
 #### Minimum Objectives
 1. **CycleGAN**: two generators (A→B, B→A) and two discriminators
@@ -217,215 +258,189 @@ Translate images from domain A to domain B without aligned pairs (e.g., sketch �
    - Train CycleGAN to translate source → target
    - Use translated + original images to train classifier
 4. Metrics:
-   - FID score (Frechet Inception Distance) on translated images
    - Classifier accuracy on target
    - Visual quality (human)
 
 #### Extra Objectives
 - Simultaneous DANN: while CycleGAN translates, an adversarial domain discriminator
-- Hybrid analysis: when does translation help and when does it not?
+- Train on source and test on translated target - is this a better approach?
+- Compare with other domain adaptation methods (feature-based)
 
 ---
 
-<a id='traccia-9'></a>
+<a id='project-9'></a>
 ### Track 9: Multi-source Domain Adaptation for Action Recognition
-**Difficulty**: Advanced  
-**Module**: Domain Adaptation  
-**When to start**: After the Domain Adaptation lecture (16/04/26)
+**Suggested Size**: Large  
+**Reference Module**: Domain Adaptation  
 
 #### Problem Description
-Instead of a single source domain, use information from 3 different sources to improve on the target.
+Perform action recognition considering two labeled datasets (source) and one unlabeled one (target). Instead of a single source domain, use information from 3 different sources to improve on the target.
 
 #### Dataset
 - **Source 1**: HMDB-51
 - **Source 2**: UCF-101
-- **Source 3**: Kinetics subset
-- **Target**: action-localization custom or subset of interest
+- **Target**: Kinetics subset
 
 #### Minimum Objectives
-1. Model with: shared encoder + 3 source classifiers + target classifier
+1. Model with: shared encoder + 2 source classifiers + target classifier
 2. Domain discriminator for each source (or global)
 3. Weighted ensemble: assign weight to each source based on similarity with the target
 4. Training loop: optimize all simultaneously
 5. Metrics: target accuracy, per-source contribution analysis
 
 #### Extra Objectives
-- Meta-learning for domain weighting: learn which sources to weight
 - Incomplete batch simulation: what happens if a source is missing during training?
 - Analogy study: how does performance vary with the number of sources?
 
 ---
 
-<a id='traccia-10'></a>
+<a id='project-10'></a>
 ### Track 10: Contrastive Learning for Video Representation (SimCLR Video)
-**Difficulty**: Beginner  
-**Module**: Self-Supervised Learning  
-**When to start**: After the Self-Supervised Learning lecture (21/04/26)
+**Suggested Size**: Small  
+**Reference Module**: Self-Supervised Learning  
 
 #### Problem Description
-Pre-train a video encoder without labels using a contrastive loss on pairs of augmented frames/clips from the same video.
+Pre-train a video encoder without labels using a contrastive loss on pairs of augmented frames/clips from the same video. Split the dataset into two sets: one for pre-training and one for linear probing.
 
 #### Dataset
-- **Kinetics-400** (subset ~50k videos) or **UCF-101** if you want to start small
-- Unlabeled (labels NOT used for pre-training)
+- **UCF-101** (https://www.crcv.ucf.edu/data/UCF101.php)
+- 1k videos
+- 101 action categories
 
 #### Minimum Objectives
-1. Video augmentations: spatial crop, temporal sampling, color jitter, rotation
-2. Encoder: 3D ResNet mini (e.g., ResNet-18 3D)
-3. Projection head: encoder → 128-dim vector
-4. Contrastive loss: SimCLR
-   - Batch of N videos
-   - For each video: two augmentations → two embeddings
-   - Loss: maximize similarity of augmentations from the same video, minimize with the rest of the batch
-5. Pre-training for K epochs (e.g., 100)
-6. **Linear probe**: freeze encoder, train only FC layer on labeled dataset (e.g., 10% HMDB), measure accuracy
-7. Metric: compare linear probe accuracy vs supervised training from scratch
+1. Supervised baseline on the labeled set for reference
+2. 3D ResNet-18 as backbone
+3. Pre-train with SimCLR on the unlabeled set and do linear probing on the labeled set
+4. Metric: standard classification accuracy, compare linear probe accuracy vs supervised training from scratch
 
 #### Extra Objectives
 - Temperature in contrastive loss: T=0.1, 0.5, 1.0, effect on convergence
 - Visualization: t-SNE embeddings of similar videos should cluster together
 - Momentum contrast (MoCo) for larger batch size
+- Other contrastive learning methods
+- Linear probing vs fine-tuning
 
 ---
 
-<a id='traccia-11'></a>
-### Track 11: Masked Video Modeling (MAE-style) for Egocentric Video
-**Difficulty**: Intermediate  
-**Module**: Self-Supervised Learning  
-**When to start**: After the Self-Supervised Learning lecture (21/04/26)
+<a id='project-11'></a>
+### Track 11: Masked Autoencoders for image representation learning
+**Suggested Size**: Small  
+**Reference Module**: Self-Supervised Learning  
 
 #### Problem Description
-Mask random frames in a video and train a model to reconstruct them (autoencoder-style). Useful for egocentric because the model learns what happens in the procedural space.
+Pre-train a transformer masked autoencoder in an unsupervised way, then use it for downstream tasks with linear probing. Split the dataset in an unlabeled set for pre-training and a labeled set for linear probing.
 
 #### Dataset
-- **EPIC-Kitchens** (1000 videos ~30 frames each)
-- Or your own procedural data
+- **ImageNet 1K** or a subset of it (https://www.image-net.org/download.php)
+- 1K classes
+- 1M images
+
 
 #### Minimum Objectives
-1. **Input**: sequence of frames [1, 2, 3, 4, 5] (e.g., 5 frames, 1 every 0.2 sec)
-2. **Masking**: mask 50% of the frames (e.g., [X, 2, X, 4, X])
-3. **Encoder**: ViT 3D or CNN 3D on unmasked frames
-4. **Decoder**: reconstructs masked frames from encoder embeddings
-5. **Loss**: MSE between reconstructed and original frames
-6. **Evaluation**:
-   - Reconstruction MSE/PSNR
-   - Linear probe accuracy (downstream task: action classification)
-   - Comparison with supervised pre-training
+1. Supervised baseline on the labeled set for reference
+2. Train a masked autoencoder transformer on the unlabeled set and do linear probing on the labeled set
+3. **Evaluation**: standard classification accuracy, compare linear probe accuracy vs supervised training from scratch
 
 #### Extra Objectives
-- Masking strategies: random vs patch-based vs temporal
-- Asymmetric decoder (small) for efficiency
 - Visualization of reconstructed frames
+- Ablate hyper-parameters (masking percentage etc.)
+- Compare with other self-supervised learning methods
 
 ---
 
-<a id='traccia-12'></a>
+<a id='project-12'></a>
 ### Track 12: Clustering-based Self-Supervised Learning for Action Discovery
-**Difficulty**: Intermediate  
-**Module**: Self-Supervised Learning  
-**When to start**: After the Self-Supervised Learning lecture (21/04/26)
+**Suggested Size**: Medium  
+**Reference Module**: Self-Supervised Learning  
 
 #### Problem Description
 Discover recurring actions in **unlabeled** videos using iterative clustering. Useful when you have no annotations but the video has repetitive patterns.
 
 #### Dataset
-- Unlabeled procedural videos (e.g., YouTube DIY subset, ~500 videos)
-- Or shopping, cooking videos, etc.
+- Kinetics-400 (https://github.com/cvdfoundation/kinetics-dataset)
+- Pick a subset of classes/videos if too large
 
 #### Minimum Objectives
-1. Feature extraction: pre-trained backbone (e.g., CLIP, TimeSformer)
-2. Feature pooling per clip (e.g., 30-frame clip → 1 512-dim vector)
+1. Train a self-supervised model on Kinetics-400 (e.g., SimCLR or VideoMAE)
+2. Extract features from the trained model for each video
 3. K-means clustering (start with k=10, then experiment)
-4. Pseudo-labels: assign a cluster to each clip
-5. Fine-tuning: train a classifier on pseudo-labels
-6. Evaluation: 
-   - Cluster purity (how many videos in cluster 0 are truly similar?)
-   - Downstream task accuracy if you have ground truth labels (optional)
-7. Iteration: repeat clustering on fine-tuned embeddings
+4. Pseudo-labels: assign a cluster label to each clip
+5. Evaluation: Cluster purity (how many videos in cluster 0 are truly similar?)
 
 #### Extra Objectives
-- Hierarchical clustering: discover hierarchy (macro-actions vs micro-steps)
-- Temporal consistency: clips from the same video should stay in the same cluster
+- Try different clustering methods
+- Try different self-supervised learning methods
+- Inspect clusters and try to assign meaningful labels to them
 
 ---
 
-<a id='traccia-13'></a>
-### Track 13: Temporal Action Localization with 1D CNN
-**Difficulty**: Beginner  
-**Module**: Video Understanding  
-**When to start**: After the Video Understanding lecture (30/04/26)
+<a id='project-13'></a>
+### Track 13: Temporal Action Segmentation from Video
+**Suggested Size**: Small  
+**Reference Module**: Video Understanding  
 
 #### Problem Description
-Localize **when** an action happens in the video (find start/end frame). E.g., in a 2-minute video, find that the "chopping" action starts at frame 120 and ends at frame 350.
+Train a model to segment actions from video assigning a label to each frame.
 
 #### Dataset
-- **ActivityNet-1.3** (subset of 20 classes, ~100 videos)
-- Pre-extracted video features (C3D/SlowFast)
-- Annotations: start/end frames for each action
+- **EGTEA Gaze+** (https://cbs.ic.gatech.edu/fpv/)
+- Consider pre-extracted features (e.g., from https://github.com/antoninofurnari/rulstm)
+- Annotations: start/end frames for each action (may consider labels from https://github.com/antoninofurnari/rulstm)
 
 #### Minimum Objectives
-1. Pre-processing: convert video → sequence of features (e.g., features every 0.5 sec)
-2. 1D CNN encoder: processes features along the temporal dimension
-3. Regression head: predicts (start_frame, end_frame) for each window
-4. Loss: MSE + IoU loss
-5. Metric: mAP @IoU=0.5 (how many predictions are within 50% of the ground truth?)
-6. Report: systematic errors (e.g., always predicts the action too short/long)?
+1. 1D CNN model: processes features along the temporal dimension
+2. LSTM model
+3. xLSTM model
+4. Compare the three models
+5. Report: systematic errors (e.g., always predicts the action too short/long)?
 
 #### Extra Objectives
 - Soft-NMS post-processing: merge overlapping detections
-- Class-agnostic detection: find action boundaries without knowing the class
+- Compare with Mamba-based models
 
 ---
 
-<a id='traccia-14'></a>
-### Track 14: Action Recognition with Vision Transformer (ViT-based)
-**Difficulty**: Intermediate  
-**Module**: Video Understanding  
-**When to start**: After the Video Understanding lecture (30/04/26)
+<a id='project-14'></a>
+### Track 14: Action Anticipation from Video
+**Suggested Size**: Medium  
+**Reference Module**: Video Understanding  
 
 #### Problem Description
-Use self-attention (Vision Transformer) to classify actions in videos. The Transformer views the video as a sequence of spatio-temporal patches.
+Anticipate the action in a video considering the setup of https://github.com/antoninofurnari/rulstm.
 
 #### Dataset
-- **HMDB-51** or **Kinetics-400 subset**
-- Video frames or pre-extracted features
+- **EPIC-KITCHENS** (https://epic-kitchens.github.io)
+- Pre-extracted features from https://github.com/antoninofurnari/rulstm (or newer features if available)
+- Look at the action anticipation challenge (https://www.codabench.org/competitions/14471/)
 
 #### Minimum Objectives
-1. **Patch embedding**: divide video into 16x16x4 patches (space x time), project to 768-dim
-2. **Positional encoding**: spatio-temporal positions
-3. **Transformer**: stack of attention layers
-4. **Classification**: CLS token → FC head → logits for 51 classes
-5. **Training**: standard supervised CE loss
-6. **Evaluation**: Top-1 accuracy, comparison with 3D CNN baseline
-7. Comparative metrics: latency, # params
+1. RULSTM baseline from https://github.com/antoninofurnari/rulstm
+2. xLSTM-based model
+3. Mamba-based model
+4. Compare the three models
 
 #### Extra Objectives
-- Attention visualization: which patches does the model look at?
-- Comparison ViT vs TimeSformer (video-specific version)
-- Efficiency: reduce # layers, # attention heads
+- Re-implement RULSTM with an xLSTM and compare with others
+- Compare with Transformer-based models
 
 ---
 
-<a id='traccia-15'></a>
+<a id='project-15'></a>
 ### Track 15: Vision-Language Alignment with CLIP for Video
-**Difficulty**: Intermediate  
-**Module**: Vision & Language  
-**When to start**: After the Vision & Language lecture (07/05/26)
+**Suggested Size**: Medium  
+**Reference Module**: Vision & Language  
 
 #### Problem Description
 Align video features with text using a contrastive loss (CLIP style). Allows text queries for videos (e.g., "person chopping vegetables" → find similar videos).
 
 #### Dataset
-- **MSR-VTT** (subset ~500 videos with captions)
-- Or **COCO-Captions** adapted with video captions
+- **EPIC-KITCHENS** (https://epic-kitchens.github.io)
+- Loot at the multi-instance retrieval challenge (https://www.codabench.org/competitions/12008/)
 
 #### Minimum Objectives
-1. **Video encoder**: pre-trained (TimeSformer, SlowFast)
-2. **Text encoder**: pre-trained (BERT, DistilBERT)
-3. **Contrastive loss**: 
-   - Batch of N (video, caption) pairs
-   - Maximize similarity of correct pairs
-   - Minimize similarity of incorrect pairs
+1. **Video encoder**: pre-trained (TimeSformer, SlowFast) - extract features
+2. **Text encoder**: pre-trained (BERT, DistilBERT) - extract features
+3. **Contrastive loss**: Train an alignment module (e.g. FC layers) on top of the pre-trained encoders
 4. Training and evaluation:
    - Text-to-video retrieval: given text, find a similar video
    - Metric: R@1, R@5, R@10 (top-K recall)
@@ -433,54 +448,49 @@ Align video features with text using a contrastive loss (CLIP style). Allows tex
 
 #### Extra Objectives
 - Fine-tuning encoder (vs frozen)
-- Zero-shot action recognition: assign a text label to actions, top-5 accuracy
 - Failure analysis: which pairs does the model confuse?
 
 ---
 
-<a id='traccia-16'></a>
-### Track 16: Multimodal Action Recognition – Video + Audio + Text
-**Difficulty**: Advanced  
-**Module**: Vision & Language  
-**When to start**: After the Vision & Language lecture (07/05/26)
+<a id='project-16'></a>
+### Track 16: Multimodal Action Recognition – Video + Audio
+**Suggested Size**: Large  
+**Reference Module**: Video Understanding  
 
 #### Problem Description
-Classify actions by simultaneously exploiting video, audio, and captions. More modalities = more robustness.
+Classify actions by simultaneously exploiting video and audio. More modalities = more robustness.
 
 #### Dataset
-- Synthetic (create your own videos with audio) or AudioSet + video
-- Subset: 10 classes, 100 videos each
+- **EPIC-KITCHENS** (https://epic-kitchens.github.io)
+- Look at the action recognition challenge (https://www.codabench.org/competitions/13636/)
 
 #### Minimum Objectives
 1. **Video encoder**: 3D CNN
 2. **Audio encoder**: 1D CNN on spectrogram (librosa)
-3. **Text encoder**: BERT / DistilBERT
-4. **Fusion strategy**: embedding concatenation + FC
-5. Loss: standard CE
-6. Evaluation: 
-   - Multimodal accuracy (all 3)
+3. **Fusion strategy**: embedding concatenation + FC
+4. Loss: standard CE
+5. Evaluation: 
+   - Multimodal accuracy (all 2 modalities)
    - Single modality accuracy (for comparison)
    - Contribution analysis: which modality counts the most?
 
 #### Extra Objectives
 - Missing modality: robustness when video/audio/text is missing
-- Cross-modal attention
+- Cross-modal attention (perceiver-like module for audio-video fusion)
 - Analysis of late vs early fusion
 
 ---
 
-<a id='traccia-17'></a>
-### Track 17: Egocentric Video + Gaze for Procedural Understanding
-**Difficulty**: Intermediate  
-**Module**: Video Understanding  
-**When to start**: After the Video Understanding lecture (30/04/26)
+<a id='project-17'></a>
+### Track 17: Egocentric Video + Gaze for Action Recognition
+**Suggested Size**: Large  
+**Reference Module**: Video Understanding  
 
 #### Problem Description
 Combine egocentric video (from a first-person point of view) with gaze tracking (where the person is looking) to understand what they are doing.
 
 #### Dataset
-- **EPIC-Kitchens + gaze** (subset with gaze annotations)
-- Or **AriaGen2** (smart glasses with IMU, gaze)
+- **EGTEA Gaze+** (https://cbs.ic.gatech.edu/fpv/)
 - Features: video frames + gaze heatmap
 
 #### Minimum Objectives
@@ -500,48 +510,44 @@ Combine egocentric video (from a first-person point of view) with gaze tracking 
 
 ---
 
-<a id='traccia-18'></a>
-### Track 18: State-Space Models (Mamba) for Long Sequences
-**Difficulty**: Advanced  
-**Module**: Advanced Sequential Modeling  
-**When to start**: After the Advanced Sequential Modeling lecture (19/05/26)
+<a id='project-18'></a>
+### Track 18: State-Space Models (Mamba) for Mistake Detection
+**Suggested Size**: Large  
+**Reference Module**: Advanced Sequential Modeling  
 
 #### Problem Description
-Use State-Space Models (Mamba, Hippo) to model very long sequences (e.g., entire procedural videos of 1+ minutes) without the quadratic cost of attention.
+Use State-Space Models (Mamba, Hippo) to find mistake in long procedural videos. Take a dataset with per-frame mistake labels and train a model to predict mistake or not for each frame.
 
 #### Dataset
-- **EPIC-Kitchens** long sequences (~30 min sessions, features every 0.5 sec = 3600 steps)
-- Subset: 100 videos, 50 actions
+- **Assembly101** (look for pre-extracted features)
+- Use one of the views
+- Annotations: per-frame mistake labels
 
 #### Minimum Objectives
-1. **Baseline LSTM**: standard model on long sequences
+1. **Baseline C2F from the original paper**: re-implement the baseline from the original paper and replicate results
 2. **Mamba/SSM**: implementation (or use library: mamba-ssm, ssm-lib)
-3. Training: same loss (CE for action), same preprocessing
-4. Metrics:
-   - Perplexity / Accuracy on actions
-   - Training time (wall-clock)
-   - Memory usage
-5. Benchmark: Mamba vs LSTM on long sequences
+3. **xLSTM**: implementation (or use library: xlstm)
+4. **Benchmark**: Mamba vs xLSTM vs Baseline on long sequences
 
 #### Extra Objectives
-- Hippo variant (hyperbolic vs standard Mamba)
-- Selective state updates (interpretability)
+- Compare with online Transformer (TeSTra etc.)
 - Ablation: how does sequence length affect Mamba vs LSTM?
+- Is injecting ground truth actions helpful?
 
 ---
 
-<a id='traccia-19'></a>
+<a id='project-19'></a>
 ### Track 19: Transformer vs RNN for Procedural Video Understanding
-**Difficulty**: Intermediate  
-**Module**: Advanced Sequential Modeling  
-**When to start**: After the Advanced Sequential Modeling lecture (19/05/26)
+**Suggested Size**: Medium  
+**Reference Module**: Advanced Sequential Modeling  
 
 #### Problem Description
 Compare Transformer and RNN on procedural step understanding tasks (e.g., Assembly, cooking): which is more effective on procedures?
 
 #### Dataset
-- **Assembly101** (subset of 5 procedures, ~50 videos)
-- Annotations: step-wise labels, duration of each step
+- **EGO4D Goal-Step** (https://github.com/facebookresearch/ego4d-goalstep)
+- Consider the online step detection task
+- Look for pre-extracted video features
 
 #### Minimum Objectives
 1. **LSTM baseline**: encoder on video features
@@ -556,345 +562,117 @@ Compare Transformer and RNN on procedural step understanding tasks (e.g., Assemb
 - Hybrid: Transformer + recurrence layer
 - Attention analysis: attention heads specialized for temporal vs contextual?
 
+
 ---
 
-<a id='traccia-20'></a>
-### Track 20: Diffusion Models for Trajectory/Motion Generation
-**Difficulty**: Intermediate  
-**Module**: Advanced Sequential Modeling  
-**When to start**: After the Advanced Sequential Modeling lecture (19/05/26)
+<a id='project-20'></a>
+### Track 20: Image & Language Representation Learning
+**Suggested Size**: Medium  
+**Reference Module**: Vision & Language  
 
 #### Problem Description
-Generate plausible 2D/3D trajectories (people walking) or human motion sequences conditioned by an initial context.
+Learn joint representations of images and text using a contrastive loss (CLIP style). Allows text queries for images.
 
 #### Dataset
-- **Human3.6M** (skeleton motion capture data, walking/running subset)
-- Or synthetic 2D trajectories (people in top-down view)
+- **MS-COCO** (https://cocodataset.org/)
+- 1.5M image-text pairs
+- can pick a subset
 
 #### Minimum Objectives
-1. **VAE baseline**: compresses trajectory → latent space, then generates
-2. **Diffusion model** (DDPM): 
-   - Forward: progressively add noise to the trajectory
-   - Reverse: network learns to remove noise
-   - Sampling: iteratively generate new trajectories
-3. Loss: reconstruction MSE
-4. Metrics:
-   - Frechet distance (between generated and real trajectories)
-   - Diversity: generated variance vs real variance
-5. Qualitative evaluation: visualize some generated trajectories
+1. **Image encoder**: pre-trained (ResNet-50, ViT)
+2. **Text encoder**: pre-trained (BERT, DistilBERT)
+3. **Contrastive loss**: Train an alignment module (e.g. FC layers) on top of the pre-trained encoders
+4. Training and evaluation:
+   - Image-to-text retrieval: given text, find a similar image
+   - Metric: R@1, R@5, R@10 (top-K recall)
+5. Report: does zero-shot search work?
 
 #### Extra Objectives
-- Conditioning: generate trajectory given initial velocity
-- Classifier-free guidance
-- Denoising steps analysis
+- Fine-tuning encoder (vs frozen)
+- Failure analysis: which pairs does the model confuse?
 
 ---
 
-<a id='traccia-21'></a>
-### Track 21: Deep Q-Learning for Frame Selection in Video
-**Difficulty**: Beginner  
-**Module**: Reinforcement Learning  
-**When to start**: After the Reinforcement Learning lecture (26/05/26)
+<a id='project-21'></a>
+### Track 21: Deep Reinforcement Learning for Frame Selection in Video
+**Suggested Size**: Large  
+**Reference Module**: Reinforcement Learning  
 
 #### Problem Description
 An agent learns to select informative frames from a video to reduce computational cost while maintaining good action classification accuracy. This is useful for compressed video.
 
 #### Dataset
-- Video classification task (e.g., HMDB-51 subset, 100 videos)
-- Manually or automatically assign an "informativeness" score to each frame (e.g., maximum action divergence from the last selected frame)
+- **UCF101** (https://www.crcv.ucf.edu/data/UCF101.php)
 
 #### Minimum Objectives
-1. **State**: current frame + history of selected frames
-2. **Action space**: {select_frame, skip_frame}
-3. **Reward**: +1 if action is correctly classified, -0.01 for selected frame (cost)
-4. **Q-network**: CNN + FC that predicts Q(state, action)
-5. **DQN**: training loop with experience replay
-6. Evaluation:
+1. **EfficientNet-B0** encoder on individual frames as an agent. It predicts a binary probability (select or not).
+2. **ResNet-18** encoder on the full clip as a baseline
+3. **ResNet-18** encoder on the selected frames (after binary classification)
+4. **Reward Model** assigns a reward based on the action classification accuracy/loss and number of selected frames. Choose your own reinforcement learning algorithm (e.g. DQN, PPO, etc.)
+5. **Evaluation**:
    - Action accuracy vs # of selected frames
    - Comparison: random selection vs learned selection
 
 #### Extra Objectives
-- Double DQN
-- Prioritized experience replay
+- Compare multiple reinforcemnt learning algorithms
+- Compare with other frame selection methods (random, uniform, etc.)
+- Compare different reward models
 
 ---
 
-<a id='traccia-22'></a>
-### Track 22: Policy Gradient for Gesture Control
-**Difficulty**: Intermediate  
-**Module**: Reinforcement Learning  
-**When to start**: After the Reinforcement Learning lecture (26/05/26)
+<a id='project-22'></a>
+### Track 22: Learn to Play Super Mario Bros with Deep Reinforcement Learning
+**Suggested Size**: Large  
+**Reference Module**: Reinforcement Learning  
 
 #### Problem Description
-Train an agent to control a simple environment (e.g., avatar movement) by interpreting human gestures. The agent receives a reward if it correctly interprets the gesture.
+Train an agent to play Super Mario Bros using deep reinforcement learning. The agent receives a reward based on the distance traveled, coins collected, and enemies defeated.
 
 #### Dataset
-- Gesture dataset (e.g., MediaPipe skeleton of 5 common gestures) + Gymnasium environment (CartPole or GridWorld)
+- **Super Mario Bros** (see here: https://github.com/yfeng997/MadMario)
 
 #### Minimum Objectives
-1. **Policy network**: gesture encoder (CNN on skeleton) → action logits
-2. **Algorithm**: REINFORCE (vanilla policy gradient)
-   - Sample actions from policy
-   - Calculate return (cumulative reward)
-   - Update policy: gradient ascent on log-prob
-3. Evaluation:
+1. **Agent**: Deep Q-Network (DQN) with a 2D CNN for perception
+2. **Reward Model**: Reward based on distance traveled, coins collected, and enemies defeated
+3. **Comparison**: Compare with other reinforcement learning algorithms (e.g. PPO, etc.)
+4. **Evaluation**:
    - Cumulative reward over time
    - Convergence speed
+   - Number of worlds completed
 
 #### Extra Objectives
-- Actor-Critic (reduces variance)
-- Curriculum: start with easy tasks, then difficult ones
+- Ablate different reward models
+- Experiment with 3D CNNs and temporal models (e.g., RNNs) for action selection (agent)
 
 ---
 
-<a id='traccia-23'></a>
-### Track 23: Multi-agent RL for Task Coordination
-**Difficulty**: Advanced  
-**Module**: Reinforcement Learning  
-**When to start**: After the Reinforcement Learning lecture (26/05/26)
+<a id='project-23'></a>
+### Track 23: Align a Small LLM with GRPO for Strict Code or JSON Generation
+**Suggested Size**: Large  
+**Reference Module**: Reinforcement Learning
 
 #### Problem Description
-Two or three agents learn to coordinate parallel procedural tasks (e.g., assembly with two robotic arms, recipe preparation with two people).
+Large Language Models often struggle with strict formatting constraints when generating complex outputs. This project involves fine-tuning a small LLM (e.g., 1.5B to 3B parameters) using Group Relative Policy Optimization (GRPO) to output syntactically perfect code or strict JSON structures. Instead of training a memory-intensive neural Reward Model, the system uses a programmatic reward function (such as a JSON linter or Python compiler) to evaluate generations and assign rewards based on successful execution or parsing.
 
 #### Dataset
-- Synthetic: MultiAgentEnv environment based on Gymnasium
-- Define simple tasks (e.g., 5 steps each, agents must coordinate to avoid conflicts)
+- **Synthetic Data**: Generate a dataset of instructions that require strict formatting (e.g., "Generate a JSON object with the following fields: ...", "Write a Python function that ...").
+- **Reward Model**: A rule-based programmatic function (e.g., `json.loads()` for JSON, or `ast.parse()` for Python) that assigns a high reward $R_i$ for syntactically correct outputs and a penalty for parsing errors.
 
 #### Minimum Objectives
-1. **Multi-agent environment**: 2–3 agents, shared reward (coordination) or individual reward (task)
-2. **Policy**: separate policy per agent
-3. **Communication**: simple (e.g., state sharing) or silent (learn implicitly)
-4. Training: train all policies simultaneously
-5. Evaluation:
-   - Task completion rate (how many times both agents finish the task?)
-   - Coordination efficiency
-
-#### Extra Objectives
-- Emergent behavior: describe emergent behaviors during training
-- Decentralized learning: agents do not have access to the joint state
-
----
-
-<a id='traccia-24'></a>
-### Track 24: Differentiable Task Graphs (Yao method) – Group A
-**Difficulty**: Advanced  
-**Module**: Research Topic (Graphs/Procedural)  
-**When to start**: Mid-course, after Domain Adaptation
-
-#### Problem Description
-Reproduce the method by Yao et al. (2022) "Differentiable Task Graphs for Procedure Understanding". Idea: each procedure is a Directed Acyclic Graph (DAG) of steps; the model learns feasibility (which step can follow which) and predicts the sequence of steps.
-
-#### Dataset
-- **Assembly101** (subset of 5 complete procedures, ~50 videos)
-- Each video has step-wise annotations (frame→step)
-
-#### Minimum Objectives
-1. **Graph construction**: extract task graph from ground truth annotations (nodes = unique steps, edges = observed transitions)
-2. **Task graph encoder**: GNN (GCN) that maps task graph → feasibility embedding
-3. **Prediction**: given video + graph, predict the next step
-4. **Metric**: mAP on predicted step sequence vs ground truth
-5. **Baseline**: simple classifier (ignores graph) for comparison
-6. **Ablation**: remove graph components (edges, nodes), impact on performance
-
-#### Extra Objectives
-- Error analysis: when is the predicted feasibility wrong?
-- Visualization of predicted graph vs ground truth
-
-#### References
-- Paper: Yao et al. "Differentiable Task Graphs for Procedure Understanding" (ICCV 2023)
-- GitHub: official if available
-
----
-
-<a id='traccia-25'></a>
-### Track 25: Task Graphs – Softmax vs Sum Feasibility – Group B
-**Difficulty**: Advanced  
-**Module**: Research Topic (Graphs/Procedural)  
-**When to start**: Mid-course, after Domain Adaptation
-
-#### Problem Description
-**Extension of Track 24**: Yao uses sum in feasibility aggregation; experiment with softmax and compare.
-
-#### Dataset
-- Same as Track 24: Assembly101
-
-#### Minimum Objectives
-1. **Baseline Yao**: reproduce standard method (sum aggregation)
-2. **Softmax aggregation**: replace sum with softmax in feasibility prediction
-3. **Constrained optimization**: add constraints (e.g., each step must have ≤K predecessors)
-4. **Comparison**: mAP, convergence analysis, interpretability
-5. **Ablation**: which modifications help/worsen?
-
-#### Extra Objectives
-- Softer constraints (probabilistic vs hard)
-
----
-
-<a id='traccia-26'></a>
-### Track 26: Procedural Error Detection with Gaze – Group A
-**Difficulty**: Intermediate  
-**Module**: Research Topic (Egocentric/Multimodal)  
-**When to start**: After Video Understanding (late April)
-
-#### Problem Description
-An operator follows a procedure (cooking, assembly) recorded by an egocentric camera. The model detects if they are making a mistake by combining video + gaze (where they are looking).
-
-#### Dataset
-- **EPIC-Kitchens subset** (~300 videos) with manual "correct/mistake" annotations per step
-- Or create your own mini procedures labeled correct/error
-
-#### Minimum Objectives
-1. **Video feature**: TSN or pre-extracted
-2. **Gaze feature**: gaze heatmap (Gaussian on tracked point)
-3. **Fusion**: embedding concatenation
-4. **Binary classifier**: correct vs mistake
-5. **Evaluation**: F1-score, confusion matrix, per-class analysis
-6. **Ablation**: video only vs gaze only vs fused
-
-#### Extra Objectives
-- Saliency map: where does the model look when predicting an error?
-- Temporal localization: not just predicting the error, but where in the step?
-
----
-
-<a id='traccia-27'></a>
-### Track 27: Error Detection – Progress-Aware Model – Group B
-**Difficulty**: Intermediate  
-**Module**: Research Topic (Egocentric/Multimodal)  
-**When to start**: After Video Understanding (late April)
-
-#### Problem Description
-**Extension of Track 26**: Add an auxiliary "progress" prediction task (which step of the procedure are we in?) to improve error detection.
-
-#### Dataset
-- Same as Track 26
-
-#### Minimum Objectives
-1. **Baseline**: standard mistake detection
-2. **Progress predictor**: side task that predicts what the current step is (multitask setup)
-3. **Joint loss**: L = L_mistake + λ * L_progress
-4. **Comparison**: F1-score, ablation on λ
-5. **Analysis**: does progress help mistake detection?
-
-#### Extra Objectives
-- Adversarial loss: force progress embedding to be independent from mistake prediction
-
----
-
-<a id='traccia-28'></a>
-### Track 28: Graph Autoencoder for Geometric Representations
-**Difficulty**: Advanced  
-**Module**: Research Topic (Graphs/Representation)  
-**When to start**: After Metric Learning
-
-#### Problem Description
-Graph autoencoder to learn robust geometric embeddings. Applicable to scene graph retrieval, graph clustering, etc.
-
-#### Dataset
-- **Visual Genome** (scene graphs)
-- Subset: ~500 graphs with 5–15 nodes
-
-#### Minimum Objectives
-1. **Graph encoder**: GCN/GraphSAGE mapping graph → embedding
-2. **Autoencoder decoder**: MLP decoding embedding → node and edge predictions
-3. **Loss**: binary cross-entropy for edge reconstruction + node classification
+1. **Agent**: A small pre-trained LLM (e.g., Gemma-2B or Phi-3-mini) utilizing LoRA/PEFT for memory-efficient training. Choose a small enough model that does not work very well on the task.
+2. **Reward Model**: A rule-based programmatic function (e.g., `json.loads()` for JSON, or `ast.parse()` for Python) that assigns a high reward $R_i$ for syntactically correct outputs and a penalty for parsing errors.
+3. **Algorithm**: Implement the GRPO training loop, utilizing the advantage calculation $A_i = \frac{R_i - \mu_R}{\sigma_R}$ across small generation groups.
 4. **Evaluation**:
-   - Link prediction accuracy
-   - Clustering in the latent space (do similar scenes cluster together?)
-   - "Average" graph via latent interpolation
-5. **Ablation**: encoder size, decoder depth, etc.
+   - Syntax error rate / Pass@1 score on a holdout test set
+   - Reward convergence over time
+   - Comparison of format adherence before and after RL fine-tuning
 
 #### Extra Objectives
-- VAE variant (Gaussian distribution latent)
-- Hyperbolic latent space (next track)
+- Compare the GRPO fine-tuned model's performance against standard Supervised Fine-Tuning (SFT).
+- Ablate different group generation sizes (e.g., $G=4$ vs. $G=8$) to evaluate the impact on training stability and GPU memory usage.
+- Implement a dual-reward system that gives partial points for proper use of `<think>` tags prior to generating the final code.
 
 ---
-
-<a id='traccia-29'></a>
-### Track 29: Hyperbolic Embeddings for Action Hierarchy
-**Difficulty**: Intermediate  
-**Module**: Research Topic (Advanced Representations)  
-**When to start**: After Metric Learning
-
-#### Problem Description
-Actions often have a hierarchical structure (macro-actions contain micro-actions). Hyperbolic space preserves hierarchies better than Euclidean space.
-
-#### Dataset
-- **ActivityNet**: use the provided hierarchies (event categories)
-- Subset: ~20 classes, 3-level tree
-
-#### Minimum Objectives
-1. **Euclidean baseline**: standard embedding on Euclidean space
-2. **Poincare embeddings**: hyperbolic (library: geoopt)
-3. **Task**: link prediction (given partial hierarchy, predict missing links)
-4. **Metric**: 
-   - Distortion (how well does it preserve hierarchy vs euclidean?)
-   - Link prediction accuracy
-5. **Visualization**: hyperboloid projected into Poincare disk
-
-#### Extra Objectives
-- Tuning hyperbolic curvature (negative K)
-- Mixed curvature spaces
-
----
-
-<a id='traccia-30'></a>
-### Track 30: Generative Models for Data Augmentation in Egocentric Domain
-**Difficulty**: Intermediate  
-**Module**: Research Topic (Egocentric/Generative)  
-**When to start**: After Self-Supervised Learning
-
-#### Problem Description
-EPIC-Kitchens is the largest egocentric dataset, but sometimes specific actions are rare. Generate realistic synthetic frames to augment the dataset.
-
-#### Dataset
-- **EPIC-Kitchens** (1000 videos, 50 actions)
-- Focus on rare actions (e.g., "cutting" has 100 samples, "greeting" has 10)
-
-#### Minimum Objectives
-1. **VAE baseline**: compresses frame → latent, generates new ones
-2. **Diffusion model**: noisy→clean denoising to generate frames
-3. **Evaluation**:
-   - FID score (generated frame quality)
-   - Downstream action recognition: training on original+synthetic vs original only
-4. **Ablation**: which generative model works best for egocentric?
-
-#### Extra Objectives
-- Conditioning: generate frame given action label
-- Feature diversity: do generated frames add new visual variations?
-
----
-
-<a id='traccia-31'></a>
-### Track 31: Online Episodic Memory for Action Anticipation
-**Difficulty**: Advanced  
-**Module**: Research Topic (Memory/Anticipation)  
-**When to start**: After Advanced Sequential Modeling
-
-#### Problem Description
-Humans anticipate future actions by remembering similar past situations. An episodal memory module updated online can improve anticipation.
-
-#### Dataset
-- **EPIC-Kitchens** procedural sequences (~500 videos)
-- Task: given a video chunk, predict future actions 1–5 seconds ahead
-
-#### Minimum Objectives
-1. **LSTM baseline**: anticipation without memory
-2. **Memory bank**: VQ-inspired quantization of queries/values
-   - Query: current video feature
-   - Store: past features + observed future actions
-3. **Online update**: update memory during rolling window (not static)
-4. **Evaluation**:
-   - Top-5 accuracy anticipation at different horizons
-   - Memory efficiency (size, retrieval time)
-5. **Ablation**: impact of memory size, temporal decay
-
-#### Extra Objectives
-- Query learning (network that learns which memory to retrieve)
-- Temporal decay (older memories are less relevant)
-
----
-
 
 ## Groups
 
