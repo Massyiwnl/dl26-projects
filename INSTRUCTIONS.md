@@ -42,7 +42,7 @@ This file contains the list of available projects, complete details for each pro
 | 14 | [Action Anticipation from Video](#project-14) | Video Understanding | Medium | EPIC-KITCHENS | Free |
 | 15 | [Vision-Language Alignment with CLIP for Video](#project-15) | Vision & Language | Medium | EPIC-KITCHENS | Free |
 | 16 | [Multimodal Action Recognition – Video + Audio](#project-16) | Video Understanding | Large | EPIC-KITCHENS | Free |
-| 17 | [Egocentric Video + Gaze for Action Recognition](#project-17) | Video Understanding | Large | EGTEA Gaze+ | Free |
+| 17 | [Egocentric Video + Gaze for Action Recognition](#project-17) | Video Understanding | Large | EGTEA Gaze+ | The Outliers 2.0 |
 | 18 | [State-Space Models (Mamba) for Mistake Detection](#project-18) | Advanced Sequential Modeling | Large | Assembly101 | Free |
 | 19 | [Transformer vs RNN for Procedural Video Understanding](#project-19) | Advanced Sequential Modeling | Medium | EGO4D Goal-Step | Free |
 | 20 | [Image & Language Representation Learning](#project-20) | Vision & Language | Medium | MS-COCO | Free |
