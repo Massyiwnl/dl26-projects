@@ -29,7 +29,7 @@ This file contains the list of available projects, complete details for each pro
 | 1 | [Metric Learning for Face Recognition](#project-1) | Metric Learning | Small | CASIA-WebFace | G25 |
 | 2 | [Few-shot Learning for Gesture Recognition](#project-2) | Metric Learning | Medium | HAGRID | Free |
 | 3 | [Graph-based Metric Learning for Scene Understanding](#project-3) | Metric Learning | Large | GQA | Free |
-| 4 | [Feature-based Knowledge Distillation](#project-4) | Knowledge Distillation | Small | CIFAR-100 | Free |
+| 4 | [Feature-based Knowledge Distillation](#project-4) | Knowledge Distillation | Small | CIFAR-100 | G26 |
 | 5 | [Cross-Modal Knowledge Distillation (Audio to Vision)](#project-5) | Knowledge Distillation | Large | EPIC-Kitchens | Free |
 | 6 | [Knowledge Distillation for Mobile Action Recognition](#project-6) | Knowledge Distillation | Small | HMDB-51 | Free |
 | 7 | [Domain Adaptation for Action Recognition – Exocentric → Egocentric](#project-7) | Domain Adaptation | Medium | Assembly101 | Free |
