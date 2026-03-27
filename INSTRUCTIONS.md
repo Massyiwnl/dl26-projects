@@ -32,7 +32,7 @@ This file contains the list of available projects, complete details for each pro
 | 4 | [Feature-based Knowledge Distillation](#project-4) | Knowledge Distillation | Small | CIFAR-100 | G26 |
 | 5 | [Cross-Modal Knowledge Distillation (Audio to Vision)](#project-5) | Knowledge Distillation | Large | EPIC-Kitchens | Overfittony |
 | 6 | [Knowledge Distillation for Mobile Action Recognition](#project-6) | Knowledge Distillation | Small | HMDB-51 | G24 |
-| 7 | [Domain Adaptation for Action Recognition – Exocentric → Egocentric](#project-7) | Domain Adaptation | Medium | Assembly101 | Free |
+| 7 | [Domain Adaptation for Action Recognition – Exocentric → Egocentric](#project-7) | Domain Adaptation | Medium | Assembly101 | CassiaBranca |
 | 8 | [Domain Adaptation with Image-to-Image Translation (CycleGAN)](#project-8) | Domain Adaptation | Medium | Office-31 | Free |
 | 9 | [Multi-source Domain Adaptation for Action Recognition](#project-9) | Domain Adaptation | Large | Source 1 | Free |
 | 10 | [Contrastive Learning for Video Representation (SimCLR)](#project-10) | Self-Supervised Learning | Small | UCF-101 | G16 |
