@@ -53,6 +53,7 @@ This file contains the list of available projects, complete details for each pro
 | 25 | [Learn to Drive a car with Reinforcement Learning](#project-25) | Reinforcement Learning | Large | Assetto Corsa Gym | FiCo |
 | 26 | [Graph-based Metric Learning for Scene Understanding with Semantic Web Technologies](#project-26) | Metric Learning | Large | GQA | Fly Now|
 | 27 | [Multimodal Generative VQA on Synthetic 3D Scenes](#project-27) | Vision & Language | - | Synthetic Data | G17 |
+| 28 | [Egocentric Object-State Change Detection](#project-28) | Video Understanding | Medium | Ego4D | Marte |
 
 ## Detailed Project Descriptions
 
@@ -727,6 +728,65 @@ The project aims to build a multimodal generative model capable of answering que
 - Light encoder fine-tuning for improved object perception  
 - Depth map integration for enhanced spatial reasoning  
 - Semantic segmentation supervision to guide attention  
+
+
+<a id='project-28'></a>
+## Track 28: Egocentric Object-State Change Detection  
+**Suggested Size**: Small / Medium  
+**Reference Module**: Action Recognition / Video Analysis  
+
+### Problem Description
+Egocentric video understanding goes beyond classifying actions: it requires identifying *when* an object undergoes a physical transformation. This project focuses on the **temporal localization of the “Point of No Return” (PNR)** — the exact frame where an irreversible object-state change occurs (e.g., opening a jar, cutting a vegetable, switching on a device).
+
+The goal is to move past action labels and instead detect the **moment of transformation**, leveraging hand–object interactions, temporal cues, and fine-grained visual changes typical of first-person video.
+
+### Dataset
+- **Ego4D – Hands and Objects section** (contains explicit PNR annotations and rich egocentric interactions).  
+
+### Minimum Objectives
+1. **Baseline PNR Localization**  
+   Implement a simple model (e.g., frame regression or temporal boundary detection) to estimate the PNR frame, establishing a lower-bound baseline.
+
+2. **Egocentric Feature Extraction**  
+   Use 2D/3D backbones (SlowFast, X3D, TimeSformer, etc.) to extract temporal and hand–object features. Evaluate which cues best predict the PNR.
+
+3. **PNR Temporal Localization Model**  
+   Train a model to regress the PNR frame or classify the temporal segment containing the state change.  
+   Possible approaches:  
+   - Frame index regression  
+   - Temporal action localization  
+   - Change-point detection  
+
+4. **Evaluation**  
+   Measure temporal distance between predicted and ground-truth PNR (e.g., Mean Temporal Error, Frame Distance).  
+   Compare:  
+   - Baseline model  
+   - Advanced temporal model  
+   - Model with explicit hand–object cues  
+
+
+### Extra Objectives
+- **Hand–Object Interaction Modeling**  
+  Integrate hand pose estimation or hand–object bounding boxes to improve PNR precision.
+
+- **Multi-modal Fusion**  
+  Combine RGB, optical flow, depth (if available), or audio to capture richer signals of state change.
+
+- **Temporal Attention / Transformers**  
+  Use temporal attention mechanisms to automatically highlight frames most relevant to the PNR.
+
+- **Ablation Studies**  
+  Analyze the effect of:  
+  - temporal window size  
+  - presence/absence of hands  
+  - annotation noise  
+
+- **Interpretable Visualizations**  
+  Produce:  
+  - temporal heatmaps  
+  - saliency maps  
+  - frame-by-frame error curves  
+  to illustrate how the model identifies the PNR.
 
 ---
 
