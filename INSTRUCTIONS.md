@@ -55,6 +55,7 @@ This file contains the list of available projects, complete details for each pro
 | 27 | [Multimodal Generative VQA on Synthetic 3D Scenes](#project-27) | Vision & Language | - | Synthetic Data | G17 |
 | 28 | [Egocentric Object-State Change Detection](#project-28) | Video Understanding | Medium | Ego4D | Marte |
 | 29 | [Feature‑based Knowledge Distillation for Monocular Depth Estimation](#project-29) | Knowledge Distillation | Small | KITTI, NYU Depth V2 | G22 |
+| 30 | [Unsupervised Domain Adaptation for Image Recognition under Domain Shift](#project-30) | Domain Adaptation | Small | Intel Scene Classification, Places | G31 |
 
 ## Detailed Project Descriptions
 
@@ -829,6 +830,46 @@ Beyond classical output‑based distillation, you will explore **feature‑based
 - Combine output‑based and feature‑based (fitNets) KD using **weighted multi‑term loss functions**; study the effect of different weighting strategies.
 - Implement **Attention Transfer** to encourage the student to mimic spatial attention patterns.
 - Evaluate **edge‑device deployment** by exporting the student to ONNX/TensorRT and measuring real latency on a Raspberry Pi or Jetson device.
+
+
+<a id='project-30'></a>
+### Project 30: Unsupervised Domain Adaptation for Image Recognition under Domain Shift
+**Suggested Size**: Small  
+**Reference Module**: Domain Adaptation  
+
+#### Problem Description
+Image recognition models trained on a specific dataset often suffer a significant drop in performance when evaluated on images coming from a different distribution, a phenomenon known as **domain shift**. This project focuses on understanding, quantifying, and mitigating this effect.
+
+You will train a convolutional classifier on a **source domain** composed of natural and urban scenes. The trained model will then be evaluated on a **target domain** consisting of images you personally collected. These images differ in style, lighting, resolution, and acquisition conditions, making them ideal for studying real‑world domain shift.
+
+After measuring the degradation in accuracy, you will apply **unsupervised domain adaptation (UDA)** techniques—without using labels from the target domain—to improve the model’s generalization ability.
+
+#### Datasets
+- **Source domain**: Intel Image Classification Dataset, a subset of Places (http://places2.csail.mit.edu, https://github.com/CSAILVision/miniplaces) or similar
+- **Target domain**: Custom dataset (your own photos)
+
+#### Minimum Objectives
+1. **Training and Evaluation on Source Domain**  
+   Train a CNN classifier (e.g., ResNet‑18, MobileNetV2) on the labeled source dataset and evaluate its performance.
+
+2. **Evaluation on Target Domain**  
+   Test the same model on the unlabeled target dataset to quantify the domain shift and highlight performance degradation. 
+
+3. **Unsupervised Domain Adaptation**  
+   Implement at least two UDA strategies, such as:  
+   - **Feature Alignment** (e.g., domain‑adversarial training)  
+   - **Pixel-Based Adaptation** (e.g., CycleGAN)
+
+4. **Performance Comparison**  
+   Compare the model’s performance **before and after adaptation** on the target domain, reporting accuracy and qualitative failure cases.
+
+#### Extra Objectives
+- Implement **Maximum Mean Discrepancy (MMD)** or **CORAL** to explicitly reduce feature‑distribution mismatch.  
+- Visualize source–target feature embeddings using **t‑SNE** or **UMAP** to illustrate alignment improvements.  
+- Explore **self‑training** with pseudo‑labels generated on the target domain.  
+- Evaluate robustness under controlled perturbations (e.g., blur, noise, color shifts) to analyze which factors contribute most to domain shift.
+
+  
 ---
 
 ## Groups
