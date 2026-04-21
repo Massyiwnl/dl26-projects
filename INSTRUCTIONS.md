@@ -54,6 +54,7 @@ This file contains the list of available projects, complete details for each pro
 | 26 | [Graph-based Metric Learning for Scene Understanding with Semantic Web Technologies](#project-26) | Metric Learning | Large | GQA | Fly Now|
 | 27 | [Multimodal Generative VQA on Synthetic 3D Scenes](#project-27) | Vision & Language | - | Synthetic Data | G17 |
 | 28 | [Egocentric Object-State Change Detection](#project-28) | Video Understanding | Medium | Ego4D | Marte |
+| 29 | [Feature‑based Knowledge Distillation for Monocular Depth Estimation](#project-29) | Knowledge Distillation | Small | KITTI, NYU Depth V2 | G22 |
 
 ## Detailed Project Descriptions
 
@@ -788,6 +789,46 @@ The goal is to move past action labels and instead detect the **moment of transf
   - frame-by-frame error curves  
   to illustrate how the model identifies the PNR.
 
+
+<a id='project-29'></a>
+### Project 29: Feature‑based Knowledge Distillation for Monocular Depth Estimation
+**Suggested Size**: Small
+**Reference Module**: Knowledge Distillation  
+
+#### Problem Description
+State‑of‑the‑art Monocular Depth Estimation models deliver impressive accuracy but remain too computationally heavy for real‑time deployment on edge devices such as Raspberry Pi, Jetson Nano, or microcontroller‑class hardware. Knowledge Distillation (KD) offers a principled way to compress these models by training a lightweight *student* network to imitate a large, high‑performance *teacher*.
+
+In this project, you will build a compact depth‑estimation model that learns from both:
+- **ground‑truth depth maps**, and  
+- **distilled knowledge from a powerful teacher network**.
+
+Beyond classical output‑based distillation, you will explore **feature‑based distillation**, where intermediate spatial representations from the teacher guide the student toward learning richer geometric and structural cues—crucial for depth prediction.
+
+#### Datasets
+- **NYU Depth V2**  
+- **KITTI**
+
+#### Minimum Objectives
+1. **Teacher and Student**  
+   Use a strong depth‑estimation teacher (e.g., **MiDaS**, optionally fine‑tuned on NYU Depth V2) and define a lightweight student model (e.g., **MobileNetV2‑based CNN** or similar compact encoder–decoder).
+
+2. **Baseline**  
+   Train the student *from scratch* using only ground‑truth depth supervision (L1 or L2 loss), without any distillation.
+
+3. **Distillation Algorithms**  
+   Implement:
+   - **Output‑based distillation**: force the student to match the teacher’s predicted depth maps.  
+   - **Feature‑based distillation** (e.g., **FitNets**): align intermediate feature maps between teacher and student.
+
+4. **Evaluation**  
+   Compare Teacher, Baseline Student, and KD‑trained Student using:
+   - **Accuracy metrics**: MSE, MAE, δ‑accuracy thresholds  
+   - **Efficiency metrics**: model size (MB), number of parameters, inference latency (ms)
+
+#### Extra Objectives
+- Combine output‑based and feature‑based (fitNets) KD using **weighted multi‑term loss functions**; study the effect of different weighting strategies.
+- Implement **Attention Transfer** to encourage the student to mimic spatial attention patterns.
+- Evaluate **edge‑device deployment** by exporting the student to ONNX/TensorRT and measuring real latency on a Raspberry Pi or Jetson device.
 ---
 
 ## Groups
