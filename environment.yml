@@ -9,8 +9,7 @@ dependencies:
   - pytorch
   - torchvision
   - torchaudio
-  - pytorch-cuda=11.8 # Modificare a seconda del target
-  # Add other conda packages here
+  - pytorch-cuda=11.8  # Modificare a seconda del target (cluster DMI: verifica versione driver)
   - pip:
       - numpy
       - pandas
@@ -19,4 +18,6 @@ dependencies:
       - pyyaml
       - tensorboard
       - tqdm
-      # Add other pip-only packages here
+      - lmdb         # lettura feature TSM pre-estratte di Assembly101
+      - seaborn      # confusion matrix e t-SNE leggibili
+      - pillow       # IO immagini, dipendenza implicita di torchvision
