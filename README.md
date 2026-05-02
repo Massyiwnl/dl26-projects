@@ -1,60 +1,77 @@
-> **NOTE: This file is the official template for the technical README of your repository.**  
-> Before starting, make sure you have carefully read the **[INSTRUCTIONS.md](INSTRUCTIONS.md)**.  
-> This file must contain **exclusively the technical aspects** of the project (Setup, Run, baseline Results). The textual and theoretical report should be placed in the **[`docs/REPORT.md`](docs/REPORT.md)** file.
-> *Delete this note block before submission.*
-
-# [Assigned Project Title]
+# Domain Adaptation for Action Recognition — Exocentric → Egocentric
 
 [![Report](https://img.shields.io/badge/Paper-REPORT.md-blue)](docs/REPORT.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## 👥 Group and Project Information
-- **Group ID**: [E.g., G07]
-- **Project ID**: [E.g., 1]
+
+- **Group ID**: CassiaBranca
+- **Project ID**: 7
 
 ## 📝 Project Description
-A brief paragraph (3-4 lines) that visually and concisely describes the project, the main implemented model, and the task addressed. 
-*(Imagine this is the technical Abstract of your GitHub repo).*
 
-> 📖 **Official Report**: For all theoretical details, performance analysis, the architecture used, and group contributions, please refer to our formal paper: **[REPORT.md](docs/REPORT.md)**.
+Implementazione di tecniche di Domain Adaptation per il transfer di modelli di action recognition da viste esocentriche (telecamere fisse) a viste egocentriche (smart glasses) sul dataset Assembly101. Confrontiamo due approcci di feature alignment — adversarial (DANN/GRL) e statistical (MMD multi-kernel) — su feature TSM pre-estratte, valutando la chiusura del gap fra baseline source-only e oracle target-only.
+
+> 📖 **Official Report**: per l'analisi teorica completa, gli esperimenti dettagliati e i contributi individuali, vedere [docs/REPORT.md](docs/REPORT.md).
 
 ## 🛠 Technical Reproducibility
 
 ### 1. Data and Environment Setup
 
-**Prerequisites:**
-Explain how the reader can install the environment to run your code.
+**Prerequisiti:** conda/miniconda, accesso al cluster DMI (per training su GPU), credenziali Google per il download di Assembly101.
 
 ```bash
-git clone https://github.com/yourusername/your-repo.git
-cd your-repo
+git clone https://github.com/Massyiwnl/dl26-projects.git
+cd dl26-projects
 conda env create -f environment.yml
 conda activate dl-project
 ```
 
-**Dataset:**
-Explain in 2 lines where to download the data from and in which folder it needs to reside (e.g., `data/raw/`).
+**Dataset:** Assembly101 fornisce feature TSM pre-estratte in formato LMDB. Seguire le istruzioni in [`scripts/download_data.sh`](scripts/download_data.sh) per scaricare:
+- annotations dal repository ufficiale
+- feature LMDB delle 2 viste usate (1 esocentrica + 1 egocentrica)
+
+I dati attesi in `data/raw/` (gitignored). Lo script `scripts/precompute_features.sh` genera la cache `data/processed/` con feature aggregate per segmento.
 
 ### 2. Network Training
-Provide the **exact commands** to start the training.
 
-**Baseline Training:**
+**Baseline source-only (zero-shot su target):**
 ```bash
-python -m src.training.train --config experiments/configs/baseline.yaml
+python -m src.training.train --config experiments/configs/baseline_source_only.yaml
 ```
 
-**Improved Model Training:**
+**Baseline target-only (oracle / upper bound):**
 ```bash
-python -m src.training.train --config experiments/configs/model_v1.yaml
+python -m src.training.train --config experiments/configs/baseline_target_only.yaml
+```
+
+**DANN (Adversarial DA con GRL):**
+```bash
+python -m src.training.train --config experiments/configs/dann.yaml
+```
+
+**MMD (extra):**
+```bash
+python -m src.training.train --config experiments/configs/mmd.yaml
+```
+
+Su cluster DMI, sottometti come job SLURM:
+```bash
+sbatch scripts/slurm/train_dann.slurm
 ```
 
 ### 3. Evaluation
-Provide the commands to reproduce the numbers in your summary table.
 
 ```bash
-python -m src.evaluation.evaluate --config experiments/configs/model_v1.yaml
+python -m src.evaluation.evaluate --config experiments/configs/dann.yaml \
+    --checkpoint experiments/checkpoints/dann/best.pt
 ```
+
+Genera in `figures/`:
+- confusion matrix per il modello specificato
+- t-SNE pre/post DA
+- per-class accuracy gap
 
 ---
 
-*For the declaration of individual tasks and the use of AI, refer to `docs/REPORT.md`.*
+*Per la dichiarazione dei contributi individuali e dell'uso di AI generative, vedere [`docs/REPORT.md`](docs/REPORT.md).*

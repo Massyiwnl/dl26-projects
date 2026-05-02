@@ -1,16 +1,22 @@
-resources/
-
-.venv/
-env/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
 
+# Dati e output (mai commit)
 data/
 experiments/logs/
 experiments/checkpoints/
+*.lmdb
+*.npz
+*.pt
+*.pth
 
-.ipynb_checkpoints/
-
-*.log
-
+# Editor / OS
+.vscode/
+.idea/
 .DS_Store
+
+# Conda env locale (se installato dentro il repo)
+envs/
