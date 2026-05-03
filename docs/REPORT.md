@@ -98,8 +98,8 @@ TSM (Temporal Shift Module) pretrained su EPIC-KITCHENS-100, feature 2048-D per 
 
 | Membro | Contributi principali |
 |---|---|
-| [Nome] | [es. data pipeline, baseline, report] |
-| [Nome] | [es. DANN implementation, t-SNE, slide] |
+| Massimiliano Cassia | [es. data pipeline, baseline, report] |
+| Martina Brancaforte | [es. DANN implementation, t-SNE, slide] |
 
 ## 8. AI Usage Declaration
 
