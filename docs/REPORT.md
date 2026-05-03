@@ -53,10 +53,17 @@ TSM (Temporal Shift Module) pretrained su EPIC-KITCHENS-100, feature 2048-D per 
 ## 4. Experiments
 
 ### 4.1 Dataset and Splits
-- Source view: [INSERIRE — es. C10095_rgb]
-- Target view: [INSERIRE — es. HMC_21176875_mono10bit]
-- Coarse verb classes: [N classi]
-- Train/val/test split per soggetto.
+
+The Assembly101 dataset (Sener et al., CVPR 2022) was accessed via the official Google Drive distribution maintained by the authors, in compliance with the CC BY-NC 4.0 license. Access was requested on **May 3, 2026** through the team member's personal Google account (the University of Catania uses Microsoft 365 for `@studium.unict.it` accounts, which are not natively Google-Workspace-compatible); the institutional email `cssmsm01b07i754z@studium.unict.it` was disclosed in the request as proof of academic affiliation.
+
+To minimise download size and storage usage, only the **TSM features** (per-frame embeddings, 2048-D, extracted by a TSM-ResNet50 backbone pretrained on EPIC-KITCHENS-100, distributed in LMDB format) and the official **annotations** (from the public `assembly-101/assembly101-annotations` repository) were retrieved, restricted to two views:
+
+- **Source view (exocentric)**: `C10095_rgb` (camera ID `v1` in the paper notation), the frontal fixed RGB camera most commonly used as exocentric reference in the literature.
+- **Target view (egocentric)**: `HMC_21176875_mono10bit` (camera ID `e1`), the head-mounted monochrome camera centrally aligned with the participant's hand-object workspace.
+
+The classification task targets **coarse verb classes** (~17 classes after mapping rare verbs), avoiding the long-tail of the 1380 fine-grained verb+noun classes which would obscure the DA signal. The split is performed at the **subject level**, ensuring no participant overlap between train/validation/test partitions, in line with the paper's evaluation protocol.
+
+Initial Drive access lasts 14 days; renewal will be requested if the project requires it.
 
 ### 4.2 Implementation Details
 - Hardware: cluster DMI UniCT, 1× GPU [modello].
