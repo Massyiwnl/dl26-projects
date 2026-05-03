@@ -2,22 +2,26 @@ name: dl-project
 channels:
   - pytorch
   - nvidia
+  - conda-forge
   - defaults
 dependencies:
   - python=3.10
   - pip
-  - pytorch
+  # PyTorch stack via canale ufficiale pytorch+nvidia (NON via pip)
+  - pytorch=2.4.*
   - torchvision
   - torchaudio
-  - pytorch-cuda=11.8  # Modificare a seconda del target (cluster DMI: verifica versione driver)
+  - pytorch-cuda=12.1
+  # Pacchetti scientifici via conda-forge (più stabili per Windows)
+  - numpy
+  - pandas
+  - matplotlib
+  - scikit-learn
+  - pyyaml
+  - tqdm
+  - tensorboard
+  - seaborn
+  - pillow
+  # Lmdb tramite pip perché su conda-forge a volte ha problemi su Windows
   - pip:
-      - numpy
-      - pandas
-      - matplotlib
-      - scikit-learn
-      - pyyaml
-      - tensorboard
-      - tqdm
-      - lmdb         # lettura feature TSM pre-estratte di Assembly101
-      - seaborn      # confusion matrix e t-SNE leggibili
-      - pillow       # IO immagini, dipendenza implicita di torchvision
+      - lmdb
