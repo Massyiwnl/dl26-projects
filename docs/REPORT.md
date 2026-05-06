@@ -105,6 +105,31 @@ Local development is performed on a laptop with NVIDIA GeForce RTX 3060 (6 GB VR
 
 To be filled in Section 4.3 once baselines and DANN/MMD have been trained.
 
+#### Code validation on synthetic data (pre-Drive)
+
+Pending access to the official Assembly101 TSM features Drive, the entire
+training pipeline was validated on a controlled synthetic dataset that
+matches the official annotations 1:1 (same 130k segments, same 24 verb
+classes, same train/val/test partition) but synthesizes per-segment 2048-D
+features from a per-class signal in a 200-D subspace, plus a non-linear
+per-domain transform (QR-orthogonal rotation on a 512-D subspace, element-wise
+`tanh` squashing, per-domain scale, and translation of norm 6). The
+non-linearity is essential: a purely linear shift can be undone by the first
+encoder layer, eliminating the DA signal we want to test.
+
+On this synthetic set, baselines confirm the expected behaviour:
+
+| Model | Train | Eval (target val) | top-1 | balanced accuracy | macro-F1 |
+|---|---|---|---|---|---|
+| B1 — Source-only | source labelled | target unseen | 0.012 | 0.062 | 0.013 |
+| B2 — Target-only (oracle) | target labelled | target | 0.999 | 0.991 | 0.989 |
+
+The ~93 percentage-point gap on balanced accuracy gives ample headroom for
+DANN and MMD to demonstrate measurable improvement. *These numbers are
+for code validation only and will not be reported in the final results
+table; they will be replaced by the corresponding numbers on the real LMDB
+features once Drive access is granted.*
+
 ### 4.3 Quantitative Results
 | Modello | Top-1 ↑ | Top-5 ↑ | Balanced Acc ↑ | Macro-F1 ↑ |
 |---|---|---|---|---|
