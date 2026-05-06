@@ -1,22 +1,18 @@
-"""Generate synthetic SEGMENT-LEVEL features at full scale (~130k segments
-covering all official Assembly101 fine-grained train/val/test rows for the
-2 chosen views).
+"""Generate synthetic SEGMENT-LEVEL features at full scale.
 
-Why a separate script (vs precompute_segment_features.py)?
-  - `precompute_segment_features.py` is the REAL pipeline: it reads frame-level
-    .npy files (produced by 1_lmdb_to_npy.py from the official LMDB) and does
-    mean-pooling per segment.
-  - This script SHORT-CIRCUITS that pipeline for local development: it
-    generates one synthetic segment-level vector per CSV row directly,
-    using the same domain-shifted Gaussian model as the unit-test script.
+This is the CHALLENGING variant: it uses a non-linear per-domain transform
+(QR-orthogonal rotation + element-wise tanh on a low-rank subspace + bias)
+combined with low signal-to-noise ratio. The result is a non-trivial DA
+problem in which:
+    - in-domain accuracy is reachable but not perfect (B2 oracle ~75-90%)
+    - cross-domain accuracy crashes without DA (B1 ~30-50%)
+    - DANN/MMD have measurable room to close the gap
 
 Output: same as precompute_segment_features.py
     data/processed/segment_features/
         train_source.npz, train_target.npz
         val_source.npz,   val_target.npz
         test_source.npz,  test_target.npz
-
-OVERWRITES any existing .npz in the same directory.
 
 Run from repo root:
     python -m src.datasets.make_synthetic_segment_features
@@ -42,33 +38,94 @@ FEATURE_DIM = 2048
 NUM_VERBS = 24
 SEED = 42
 
-# Same shift/noise as in make_synthetic_frame_features.py for consistency.
-DOMAIN_SHIFT_NORM = 5.0
-CLASS_NOISE_STD = 1.5
+# ---- Signal calibration (HARDER than before) -----------------------------
+# Class signal lives only in the first SIGNAL_DIM coordinates.
+SIGNAL_DIM = 200
+CLASS_MEAN_SCALE = 1.5     # strong enough for in-domain learning
+CLASS_NOISE_STD = 2.0      # moderate noise, in-domain ~90% achievable
+
+# ---- Per-domain transform (NON-LINEAR, hard to undo) ---------------------
+SHIFT_RANK = 512           # rotation acts on first 512 dims (covers signal dim)
+NONLIN_GAIN = 2.5          # gain inside tanh: makes the squashing aggressive
+BIAS_NORM = 6.0            # translation magnitude
+DOMAIN_SCALE_DIFF = 0.5    # source uses scale 1+DSD/2, target uses 1-DSD/2 -> different "stretch"
+
+
+def random_rotation(rng: np.random.Generator, dim: int) -> np.ndarray:
+    """Return a (dim, dim) orthogonal matrix sampled uniformly from O(dim)."""
+    A = rng.standard_normal((dim, dim)).astype(np.float32)
+    Q, _ = np.linalg.qr(A)
+    return Q
+
+
+def make_per_domain_transform(rng: np.random.Generator):
+    """Build (R_src, scale_src, b_src, R_tgt, scale_tgt, b_tgt).
+
+    Each domain applies (in order):
+        x' = R_d @ x   on the first SHIFT_RANK coordinates
+        x' = x' * scale_d        (per-domain element-wise scale)
+        x' = NONLIN_GAIN * tanh(x' / NONLIN_GAIN)  on the first SHIFT_RANK coords
+        x' = x' + b_d
+    The tanh squashing is the non-linear ingredient that prevents a single
+    affine encoder from undoing the shift.
+    """
+    R_src_block = random_rotation(rng, SHIFT_RANK)
+    R_tgt_block = random_rotation(rng, SHIFT_RANK)
+    R_src = np.eye(FEATURE_DIM, dtype=np.float32)
+    R_tgt = np.eye(FEATURE_DIM, dtype=np.float32)
+    R_src[:SHIFT_RANK, :SHIFT_RANK] = R_src_block
+    R_tgt[:SHIFT_RANK, :SHIFT_RANK] = R_tgt_block
+
+    scale_src = 1.0 + DOMAIN_SCALE_DIFF / 2.0
+    scale_tgt = 1.0 - DOMAIN_SCALE_DIFF / 2.0
+
+    b_dir = rng.standard_normal(FEATURE_DIM).astype(np.float32)
+    b_dir = b_dir / np.linalg.norm(b_dir)
+    b_src = b_dir * BIAS_NORM
+    b_tgt = -b_dir * BIAS_NORM
+
+    return R_src, scale_src, b_src, R_tgt, scale_tgt, b_tgt
+
+
+def apply_domain(
+    x: np.ndarray, R: np.ndarray, scale: float, bias: np.ndarray
+) -> np.ndarray:
+    # rotation
+    x = x @ R.T
+    # per-domain scale (element-wise)
+    x = x * scale
+    # non-linearity on the first SHIFT_RANK coordinates
+    head = np.tanh(x[:, :SHIFT_RANK] / NONLIN_GAIN) * NONLIN_GAIN
+    x = np.concatenate([head, x[:, SHIFT_RANK:]], axis=1)
+    # translation
+    x = x + bias[None, :]
+    return x
 
 
 def generate_features(
     df: pd.DataFrame,
     class_means: np.ndarray,
-    domain_bias: np.ndarray,
+    R: np.ndarray,
+    scale: float,
+    bias: np.ndarray,
     rng: np.random.Generator,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Generate (features, labels, segment_ids) for a (split, domain) subset."""
     n = len(df)
     feats = np.empty((n, FEATURE_DIM), dtype=np.float32)
     labels = df["verb_id"].to_numpy(dtype=np.int64)
     seg_ids = df["id"].to_numpy(dtype=np.int64)
 
-    # vectorised generation: for each row, sample mean[verb] + N(0,sigma) + bias
-    # We do it in a loop with a single rng call per chunk to keep it readable
-    # and memory-friendly.
     chunk = 8192
     for start in tqdm(range(0, n, chunk), desc="  generating", leave=False):
         end = min(start + chunk, n)
         cls = labels[start:end]
-        mean = class_means[cls]                                          # (B, D)
-        noise = rng.standard_normal((end - start, FEATURE_DIM)).astype(np.float32) * CLASS_NOISE_STD
-        feats[start:end] = mean + noise + domain_bias[None, :]
+        # weak class signal in first SIGNAL_DIM dims, zeros elsewhere, plus noise
+        x = np.zeros((end - start, FEATURE_DIM), dtype=np.float32)
+        x[:, :SIGNAL_DIM] = class_means[cls]
+        x = x + rng.standard_normal(x.shape).astype(np.float32) * CLASS_NOISE_STD
+        # apply domain transform
+        x = apply_domain(x, R, scale, bias)
+        feats[start:end] = x
 
     return feats, labels, seg_ids
 
@@ -76,13 +133,14 @@ def generate_features(
 def main() -> None:
     rng = np.random.default_rng(SEED)
 
-    class_means = rng.standard_normal((NUM_VERBS, FEATURE_DIM)).astype(np.float32) * 2.0
-    d_vec = rng.standard_normal(FEATURE_DIM).astype(np.float32)
-    d_vec = (d_vec / np.linalg.norm(d_vec)) * DOMAIN_SHIFT_NORM
+    # class means live in R^SIGNAL_DIM (zeros in the rest)
+    class_means_signal = rng.standard_normal((NUM_VERBS, SIGNAL_DIM)).astype(np.float32) * CLASS_MEAN_SCALE
+    R_src, scale_src, b_src, R_tgt, scale_tgt, b_tgt = make_per_domain_transform(rng)
 
-    print("Synthetic SEGMENT-level features (full scale, all CSV rows)")
+    print("Synthetic SEGMENT-level features (CHALLENGING SHIFT)")
     print(f"  classes={NUM_VERBS}, feature_dim={FEATURE_DIM}, dtype=float32")
-    print(f"  domain_shift_norm={DOMAIN_SHIFT_NORM}, class_noise_std={CLASS_NOISE_STD}")
+    print(f"  signal_dim={SIGNAL_DIM}, class_mean_scale={CLASS_MEAN_SCALE}, class_noise_std={CLASS_NOISE_STD}")
+    print(f"  shift_rank={SHIFT_RANK}, nonlin_gain={NONLIN_GAIN}, bias_norm={BIAS_NORM}, domain_scale_diff={DOMAIN_SCALE_DIFF}")
     print(f"  output dir: {OUT_DIR}\n")
 
     splits = [("train", "train"), ("val", "validation"), ("test", "test")]
@@ -93,12 +151,14 @@ def main() -> None:
         df["sequence_id"] = parts[0]
         df["view"] = parts[1].str.replace(".mp4", "", regex=False)
 
-        for domain_name, view in [("source", SOURCE_VIEW), ("target", TARGET_VIEW)]:
+        for domain_name, view, R, scale, bias in [
+            ("source", SOURCE_VIEW, R_src, scale_src, b_src),
+            ("target", TARGET_VIEW, R_tgt, scale_tgt, b_tgt),
+        ]:
             sub = df[df["view"] == view].copy()
             if len(sub) == 0:
                 continue
-            bias = d_vec if view == SOURCE_VIEW else -d_vec
-            feats, labels, seg_ids = generate_features(sub, class_means, bias, rng)
+            feats, labels, seg_ids = generate_features(sub, class_means_signal, R, scale, bias, rng)
 
             out_path = OUT_DIR / f"{out_split}_{domain_name}.npz"
             np.savez_compressed(
