@@ -82,9 +82,28 @@ All 24 verb classes are present in both domains. Of the 211 sequences with the s
 **Segment length.** Train segments have a median length of 28 frames @ 30 fps in the source view and 30 frames in the target view (≈1 second). Mean/p95 are 49.9/171 frames source, 54.5/187 frames target. Given the moderate length, segment-level features are obtained by **mean-pooling all the frame-level TSM embeddings within each segment**, with no temporal sub-sampling.
 
 ### 4.2 Implementation Details
-- Hardware: cluster DMI UniCT, 1× GPU [modello].
-- Hyperparameters: [tabella].
-- Training time: [...].
+
+#### Data pipeline (3-step)
+
+The Assembly101 TSM features are distributed in LMDB format on the official Google Drive. Following the practice recommended by subsequent papers using this dataset — most notably **LTContext** (Bahrami et al., ICCV 2023), which states explicitly that *"loading from numpy can be faster, you can convert the .lmdb features to numpy"* — we adopt a 3-step pre-processing pipeline that decouples the heavy I/O from the training loop:
+
+1. **`src/datasets/lmdb_to_npy.py`** *(one-shot, run on the cluster on real data)*: extract per-frame TSM features from the LMDB and save one `.npy` per `(sequence_id, view)` pair, restricted to the 2 chosen views. Output shape per file: `(N_frames, 2048)` float32.
+2. **`src/datasets/precompute_segment_features.py`** *(one-shot)*: for each row of the official `train.csv`/`validation.csv`/`test.csv` filtered on the 2 views, slice the corresponding `.npy` over the segment frame range `[start_frame, end_frame]` and **mean-pool** to a single 2048-D vector. The output is a small set of `.npz` files (one per `split × domain`) with arrays `features (N, 2048) float32`, `labels (N,) int64` (verb_id), and `segment_ids (N,) int64` for traceability.
+3. **`src/datasets/assembly101.py`** + **`src/datasets/pair_loader.py`**: a PyTorch `Dataset` that loads the `.npz` eagerly into RAM (~700 MB at full scale, fits comfortably) for zero-cost `__getitem__`, plus a `PairedDomainIterator` that cycles independently over the source and target loaders to feed the DANN/MMD trainers.
+
+This separation has three concrete benefits. First, the LMDB is touched only once. Second, the segment-level pre-computation can be re-run cheaply if the task definition changes (e.g. switching from verb to action classification). Third, training epochs are bottlenecked only by GPU compute — a typical epoch is in the order of seconds on the L40S of the DMI cluster.
+
+#### Synthetic dataset for local development
+
+Since the real LMDB requires a separate access request to the main Assembly101 Drive (still pending at the time of this section), we developed and validated the entire pipeline on a synthetic dataset that mimics the expected output of step 1. The script `src/datasets/make_synthetic_segment_features.py` generates one segment-level vector per CSV row by sampling from a per-class Gaussian centred on `class_mean[verb_id]` plus a domain-specific bias `±d_vec` of norm 5. This produces 130k synthetic segments at full scale (the same numbers reported in Section 4.1) in less than 2 minutes, occupying ~1 GB of disk. Once Drive access is granted, switching to the real data will only require running steps 1 and 2 of the pipeline; downstream code (Datasets, loaders, trainers, evaluators) is unchanged.
+
+#### Hardware
+
+Local development is performed on a laptop with NVIDIA GeForce RTX 3060 (6 GB VRAM, CUDA 12.1, PyTorch 2.4.1). All final runs will be executed on the DMI cluster (`gcluster.dmi.unict.it`), specifically on `gnode10` (4 × NVIDIA L40S, 48 GB VRAM each) under the `dl-course-q2` partition with `gpu-medium` QoS (8 GB RAM, 5.6 GB VRAM, 6 h time limit), inside the official Apptainer image `/shared/sifs/latest.sif`.
+
+#### Hyperparameters
+
+To be filled in Section 4.3 once baselines and DANN/MMD have been trained.
 
 ### 4.3 Quantitative Results
 | Modello | Top-1 ↑ | Top-5 ↑ | Balanced Acc ↑ | Macro-F1 ↑ |
