@@ -22,6 +22,8 @@ dependencies:
   - tensorboard
   - seaborn
   - pillow
+  - jupyter
+  - ipykernel
   # Lmdb tramite pip perché su conda-forge a volte ha problemi su Windows
   - pip:
       - lmdb

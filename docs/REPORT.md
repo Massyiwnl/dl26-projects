@@ -54,16 +54,32 @@ TSM (Temporal Shift Module) pretrained su EPIC-KITCHENS-100, feature 2048-D per 
 
 ### 4.1 Dataset and Splits
 
-The Assembly101 dataset (Sener et al., CVPR 2022) was accessed via the official Google Drive distribution maintained by the authors, in compliance with the CC BY-NC 4.0 license. Access was requested on **May 3, 2026** through the team member's personal Google account (the University of Catania uses Microsoft 365 for `@studium.unict.it` accounts, which are not natively Google-Workspace-compatible); the institutional email `cssmsm01b07i754z@studium.unict.it` was disclosed in the request as proof of academic affiliation.
+The Assembly101 dataset (Sener et al., CVPR 2022) was accessed via the official Google Drive distribution maintained by the authors, in compliance with the CC BY-NC 4.0 license. Annotation access was granted on May 6, 2026; access to the main TSM-features Drive is being processed separately.
 
-To minimise download size and storage usage, only the **TSM features** (per-frame embeddings, 2048-D, extracted by a TSM-ResNet50 backbone pretrained on EPIC-KITCHENS-100, distributed in LMDB format) and the official **annotations** (from the public `assembly-101/assembly101-annotations` repository) were retrieved, restricted to two views:
+**Annotation files used.** We use the official `fine-grained-annotations`, which provide one row per `(segment, view)` pair with `start_frame`, `end_frame`, `verb_id`, `verb_cls`, and a flag `is_RGB` distinguishing fixed cameras (exocentric) from head-mounted ones (egocentric). The official train/validation/test splits are adopted as published. Subjects overlap across splits in the official protocol; we respect this protocol to remain comparable to published baselines on Assembly101.
 
-- **Source view (exocentric)**: `C10095_rgb` (camera ID `v1` in the paper notation), the frontal fixed RGB camera most commonly used as exocentric reference in the literature.
-- **Target view (egocentric)**: `HMC_21176875_mono10bit` (camera ID `e1`), the head-mounted monochrome camera centrally aligned with the participant's hand-object workspace.
+**Views.** To align with the standard exocentric/egocentric DA setup in the literature, we restrict the data to two views:
 
-The classification task targets **coarse verb classes** (~17 classes after mapping rare verbs), avoiding the long-tail of the 1380 fine-grained verb+noun classes which would obscure the DA signal. The split is performed at the **subject level**, ensuring no participant overlap between train/validation/test partitions, in line with the paper's evaluation protocol.
+- **Source view (exocentric):** `C10095_rgb` (camera ID `v1`), the frontal fixed RGB camera most commonly used as exocentric reference in Assembly101 papers.
+- **Target view (egocentric):** `HMC_21176875_mono10bit` (camera ID `e1`), the head-mounted monochrome camera centrally aligned with the participant's hand-object workspace.
 
-Initial Drive access lasts 14 days; renewal will be requested if the project requires it.
+**Task.** We classify the **24 verb classes** of the fine-grained annotation (`verb_id`), rather than the 1,380 fine-grained `action_id`. This avoids the long-tail of the action space (1,380 classes are dominated by rare verb-noun combinations and would dilute the DA signal), while keeping a class set rich enough to expose interesting per-class viewpoint-resistance behaviour required by Extra Objective 3 of the track.
+
+**Data scale (post-filtering).** Selecting only the source and target views above:
+
+| Split | Source segments | Target segments |
+|---|---|---|
+| Train | 47,649 | 24,743 |
+| Validation | 15,696 | 9,416 |
+| Test | 21,934 | 11,307 |
+
+All 24 verb classes are present in both domains. Of the 211 sequences with the source view in the train split, 102 also include the target view; the DA framework samples source and target independently, so the asymmetry is not a problem in practice.
+
+**Long-tail and metrics.** The class distribution is heavily long-tailed: `pick up` and `put down` together cover 36% of training segments, while the rarest verb (`shake`) accounts for less than 0.4%. Consequently, alongside top-1 accuracy we report **balanced accuracy** and **macro-F1**, which are the meaningful aggregate metrics in this regime.
+
+**Domain-conditioned class skew.** A useful preliminary observation from the EDA (see `notebooks/00_data_exploration.ipynb` and Figure 4): the egocentric target view captures `inspect` and the `attempt to *` verbs disproportionately more than the exocentric source view, while the source view captures completed actions (`pick up`, `put down`, `position`, `unscrew`, `remove`) more. This is consistent with head-mounted cameras catching close-range examinations more easily and fixed cameras catching wide-range manipulation gestures more easily. We will revisit this asymmetry in Section 5.4 (per-class analysis).
+
+**Segment length.** Train segments have a median length of 28 frames @ 30 fps in the source view and 30 frames in the target view (≈1 second). Mean/p95 are 49.9/171 frames source, 54.5/187 frames target. Given the moderate length, segment-level features are obtained by **mean-pooling all the frame-level TSM embeddings within each segment**, with no temporal sub-sampling.
 
 ### 4.2 Implementation Details
 - Hardware: cluster DMI UniCT, 1× GPU [modello].
