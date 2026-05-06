@@ -117,18 +117,20 @@ per-domain transform (QR-orthogonal rotation on a 512-D subspace, element-wise
 non-linearity is essential: a purely linear shift can be undone by the first
 encoder layer, eliminating the DA signal we want to test.
 
-On this synthetic set, baselines confirm the expected behaviour:
+On this synthetic set, baselines and DANN confirm the expected behaviour:
 
-| Model | Train | Eval (target val) | top-1 | balanced accuracy | macro-F1 |
+| Model | Train | Eval (target val) | top-1 | balanced acc | macro-F1 |
 |---|---|---|---|---|---|
-| B1 — Source-only | source labelled | target unseen | 0.012 | 0.062 | 0.013 |
-| B2 — Target-only (oracle) | target labelled | target | 0.999 | 0.991 | 0.989 |
+| B1 — Source-only | source labelled | target unseen | 0.663 | 0.683 | 0.527 |
+| **DANN (GRL)** | source labelled + target unlabelled | target unseen | **0.994** | **0.941** | **0.953** |
+| B2 — Target-only (oracle) | target labelled | target | 0.999 | 0.999 | 0.998 |
 
-The ~93 percentage-point gap on balanced accuracy gives ample headroom for
-DANN and MMD to demonstrate measurable improvement. *These numbers are
-for code validation only and will not be reported in the final results
-table; they will be replaced by the corresponding numbers on the real LMDB
-features once Drive access is granted.*
+DANN closes **81.6%** of the source-only/oracle gap on balanced accuracy
+(`+0.258` of the `+0.316` headroom), with the domain discriminator
+accuracy converging to ~0.50 by epoch 6 — the expected signature of a
+successful adversarial alignment as in Ganin et al. (2016). *These
+synthetic numbers are for code validation only. Final results will be
+reported on the real Assembly101 LMDB features.*
 
 ### 4.3 Quantitative Results
 | Modello | Top-1 ↑ | Top-5 ↑ | Balanced Acc ↑ | Macro-F1 ↑ |

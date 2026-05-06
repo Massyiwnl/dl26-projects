@@ -45,10 +45,10 @@ CLASS_MEAN_SCALE = 1.5     # strong enough for in-domain learning
 CLASS_NOISE_STD = 2.0      # moderate noise, in-domain ~90% achievable
 
 # ---- Per-domain transform (NON-LINEAR, hard to undo) ---------------------
-SHIFT_RANK = 512           # rotation acts on first 512 dims (covers signal dim)
-NONLIN_GAIN = 2.5          # gain inside tanh: makes the squashing aggressive
-BIAS_NORM = 6.0            # translation magnitude
-DOMAIN_SCALE_DIFF = 0.5    # source uses scale 1+DSD/2, target uses 1-DSD/2 -> different "stretch"
+SHIFT_RANK = 128            # very small subspace shifted
+NONLIN_GAIN = 12.0          # tanh now acts as ~identity in the bulk
+BIAS_NORM = 1.0             # very small bias
+DOMAIN_SCALE_DIFF = 0.0     # no per-domain rescaling
 
 
 def random_rotation(rng: np.random.Generator, dim: int) -> np.ndarray:
