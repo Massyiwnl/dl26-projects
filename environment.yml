@@ -27,3 +27,4 @@ dependencies:
   # Lmdb tramite pip perché su conda-forge a volte ha problemi su Windows
   - pip:
       - lmdb
+      - opencv-python-headless
