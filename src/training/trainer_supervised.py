@@ -42,10 +42,10 @@ from src.utils.seed import set_seed
 
 def build_model(in_dim: int, embed_dim: int, num_classes: int, device: torch.device):
     encoder = FeatureEncoder(
-        in_dim=in_dim, hidden_dims=(1024, 512), embed_dim=embed_dim, dropout=0.5
+        in_dim=in_dim, hidden_dims=(1024, 512), embed_dim=embed_dim, dropout=0.3
     ).to(device)
     classifier = ActionClassifier(
-        embed_dim=embed_dim, hidden_dim=128, num_classes=num_classes, dropout=0.3
+        embed_dim=embed_dim, hidden_dim=256, num_classes=num_classes, dropout=0.1
     ).to(device)
     return encoder, classifier
 

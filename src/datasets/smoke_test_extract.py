@@ -55,9 +55,13 @@ def main() -> None:
         print(f"[PASS] Test video created: {size_kb:.0f} KB")
 
         # 3. extract features at target_fps=5 -> expect ~10 frames sampled
+        from src.datasets.extract_features import _IMAGENET_MEAN, _IMAGENET_STD
+        mean_gpu = torch.from_numpy(_IMAGENET_MEAN).to(device).view(1, 3, 1, 1)
+        std_gpu = torch.from_numpy(_IMAGENET_STD).to(device).view(1, 3, 1, 1)
         feats, ts = extract_for_video(
             model, video_path, target_fps=5.0,
-            batch_size=8, num_workers=0, device=device,
+            batch_size=8, device=device,
+            mean_gpu=mean_gpu, std_gpu=std_gpu,
         )
         print(f"\nFeatures shape:    {feats.shape}")
         print(f"Features dtype:    {feats.dtype}")

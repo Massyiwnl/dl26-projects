@@ -2,17 +2,14 @@
 
 For each .mp4 file in the input directory:
     1. Decode video frames at TARGET_FPS (default 5).
-    2. Apply ImageNet normalization.
-    3. Pass through ResNet-50 (pre-trained on ImageNet) up to the 2048-D
-       average-pool layer.
-    4. Save as a single .npy file: (N_sampled_frames, 2048) float16.
+    2. Resize 256 short-side + center-crop 224 (ImageNet standard).
+    3. Batch-transfer to GPU, normalize with ImageNet stats.
+    4. Forward through ResNet-50 (pre-trained on ImageNet) up to the
+       2048-D average-pool layer.
+    5. Save as a single .npy file: (N_sampled_frames, 2048) float16.
 
 Output: data/processed/charades-ego/frame_features/<video_id>.npy
         plus a manifest mapping video_id -> sampled timestamps (sec).
-
-The downstream pipeline (precompute_segment_features.py) will then
-mean-pool these frame features over each (class, start_sec, end_sec)
-segment to produce the segment-level .npz files used by the trainer.
 
 Run from repo root:
     python -m src.datasets.extract_features \
@@ -27,11 +24,10 @@ import argparse
 import json
 from pathlib import Path
 
+import cv2
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
 from torchvision.models import resnet50, ResNet50_Weights
 from tqdm import tqdm
 
@@ -41,7 +37,10 @@ DEFAULT_VIDEO_DIR = REPO_ROOT / "data" / "raw" / "charades-ego" / "CharadesEgo_v
 DEFAULT_OUT_DIR = REPO_ROOT / "data" / "processed" / "charades-ego" / "frame_features"
 
 
-# ---------------------------- model ---------------------------------------
+# ImageNet normalization constants
+_IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+_IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+
 
 def build_feature_extractor(device: torch.device) -> nn.Module:
     """ResNet-50 ImageNet, output the 2048-D pre-fc embedding."""
@@ -52,15 +51,12 @@ def build_feature_extractor(device: torch.device) -> nn.Module:
     return model.to(device)
 
 
-# ---------------------------- video reader --------------------------------
-
 def get_video_frames(video_path: Path, target_fps: float) -> tuple[np.ndarray, np.ndarray]:
     """Decode the video at target_fps. Returns (frames, timestamps).
 
-    frames: (N, H, W, 3) uint8, RGB
+    frames: (N, H, W, 3) uint8, RGB (already short-side resized to 256 and center-cropped to 224)
     timestamps: (N,) float, seconds
     """
-    import cv2
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open video {video_path}")
@@ -70,7 +66,7 @@ def get_video_frames(video_path: Path, target_fps: float) -> tuple[np.ndarray, n
         src_fps = 30.0
     step = max(int(round(src_fps / target_fps)), 1)
 
-    frames = []
+    crops = []
     timestamps = []
     idx = 0
     while True:
@@ -79,65 +75,54 @@ def get_video_frames(video_path: Path, target_fps: float) -> tuple[np.ndarray, n
             break
         if idx % step == 0:
             rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
-            frames.append(rgb)
+            h, w = rgb.shape[:2]
+            # Resize so the short side is 256 (matches torchvision Resize(256))
+            if h < w:
+                new_h, new_w = 256, int(round(w * 256 / h))
+            else:
+                new_h, new_w = int(round(h * 256 / w)), 256
+            resized = cv2.resize(rgb, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+            # Center crop 224x224
+            y0 = (new_h - 224) // 2
+            x0 = (new_w - 224) // 2
+            cropped = resized[y0:y0 + 224, x0:x0 + 224]
+            crops.append(cropped)
             timestamps.append(idx / src_fps)
         idx += 1
     cap.release()
 
-    if not frames:
-        return np.zeros((0,), dtype=np.uint8), np.zeros((0,), dtype=np.float32)
+    if not crops:
+        return np.zeros((0, 224, 224, 3), dtype=np.uint8), np.zeros((0,), dtype=np.float32)
 
-    return np.stack(frames, axis=0), np.asarray(timestamps, dtype=np.float32)
+    return np.stack(crops, axis=0), np.asarray(timestamps, dtype=np.float32)
 
-
-# ---------------------------- dataset for batched inference ---------------
-
-class _VideoDataset(Dataset):
-    """Iterate over the frames of a single video. Used by DataLoader for
-    batched ImageNet preprocessing + GPU transfer."""
-
-    _transform = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225],
-        ),
-    ])
-
-    def __init__(self, frames: np.ndarray) -> None:
-        self.frames = frames
-
-    def __len__(self) -> int:
-        return len(self.frames)
-
-    def __getitem__(self, idx: int) -> torch.Tensor:
-        return self._transform(self.frames[idx])
-
-
-# ---------------------------- main ----------------------------------------
 
 @torch.no_grad()
-def extract_for_video(model: nn.Module, video_path: Path, target_fps: float,
-                       batch_size: int, num_workers: int, device: torch.device
-                       ) -> tuple[np.ndarray, np.ndarray]:
+def extract_for_video(
+    model: nn.Module,
+    video_path: Path,
+    target_fps: float,
+    batch_size: int,
+    device: torch.device,
+    mean_gpu: torch.Tensor,
+    std_gpu: torch.Tensor,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Decode + preprocess + forward, no DataLoader overhead."""
     frames, ts = get_video_frames(video_path, target_fps)
     if len(frames) == 0:
         return np.zeros((0, 2048), dtype=np.float16), ts
 
-    ds = _VideoDataset(frames)
-    dl = DataLoader(ds, batch_size=batch_size, shuffle=False,
-                    num_workers=num_workers, pin_memory=(device.type == 'cuda'))
-
     feats_list = []
-    for batch in dl:
-        batch = batch.to(device, non_blocking=True)
-        out = model(batch).cpu().numpy().astype(np.float16)
+    n = len(frames)
+    for i in range(0, n, batch_size):
+        batch_np = frames[i:i + batch_size]  # (B, 224, 224, 3) uint8
+        t = torch.from_numpy(batch_np).to(device, non_blocking=True)
+        t = t.permute(0, 3, 1, 2).float().div_(255.0)  # (B, 3, 224, 224)
+        t.sub_(mean_gpu).div_(std_gpu)
+        out = model(t).cpu().numpy().astype(np.float16)
         feats_list.append(out)
 
-    feats = np.concatenate(feats_list, axis=0) if feats_list else np.zeros((0, 2048), dtype=np.float16)
+    feats = np.concatenate(feats_list, axis=0)
     return feats, ts
 
 
@@ -145,12 +130,11 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--video-dir", type=Path, default=DEFAULT_VIDEO_DIR)
     ap.add_argument("--output-dir", type=Path, default=DEFAULT_OUT_DIR)
-    ap.add_argument("--target-fps", type=float, default=5.0,
-                    help="Sample one frame every 1/target_fps seconds.")
-    ap.add_argument("--batch-size", type=int, default=64)
-    ap.add_argument("--num-workers", type=int, default=2)
-    ap.add_argument("--skip-existing", action="store_true",
-                    help="Skip videos for which the .npy already exists.")
+    ap.add_argument("--target-fps", type=float, default=5.0)
+    ap.add_argument("--batch-size", type=int, default=128)
+    ap.add_argument("--num-workers", type=int, default=0,
+                    help="Kept for CLI compatibility; ignored (no DataLoader).")
+    ap.add_argument("--skip-existing", action="store_true")
     args = ap.parse_args()
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -161,6 +145,7 @@ def main() -> None:
     print(f"Video dir:  {args.video_dir}")
     print(f"Output dir: {args.output_dir}")
     print(f"Target FPS: {args.target_fps}")
+    print(f"Batch size: {args.batch_size}")
 
     if not args.video_dir.exists():
         raise FileNotFoundError(f"Video dir not found: {args.video_dir}")
@@ -169,6 +154,8 @@ def main() -> None:
     print(f"Found {len(videos)} videos\n")
 
     model = build_feature_extractor(device)
+    mean_gpu = torch.from_numpy(_IMAGENET_MEAN).to(device).view(1, 3, 1, 1)
+    std_gpu = torch.from_numpy(_IMAGENET_STD).to(device).view(1, 3, 1, 1)
 
     manifest: dict[str, dict] = {}
     if manifest_path.exists():
@@ -176,7 +163,8 @@ def main() -> None:
 
     n_done = 0
     n_skipped = 0
-    for video_path in tqdm(videos, desc="extracting"):
+    pbar = tqdm(videos, desc="extracting")
+    for video_path in pbar:
         video_id = video_path.stem
         out_path = args.output_dir / f"{video_id}.npy"
         if args.skip_existing and out_path.exists():
@@ -185,7 +173,8 @@ def main() -> None:
 
         feats, ts = extract_for_video(
             model, video_path, args.target_fps,
-            batch_size=args.batch_size, num_workers=args.num_workers, device=device,
+            batch_size=args.batch_size, device=device,
+            mean_gpu=mean_gpu, std_gpu=std_gpu,
         )
         np.save(out_path, feats)
         manifest[video_id] = {
@@ -195,8 +184,12 @@ def main() -> None:
         }
         n_done += 1
 
+        # update progress bar with running stats
+        if n_done % 50 == 0:
+            pbar.set_postfix({"done": n_done, "skipped": n_skipped})
+
         # periodically dump the manifest in case of interruption
-        if n_done % 100 == 0:
+        if n_done % 200 == 0:
             manifest_path.write_text(json.dumps(manifest))
 
     manifest_path.write_text(json.dumps(manifest))
