@@ -139,8 +139,10 @@ All numbers below are the final evaluation of the `best.pt` checkpoint (selected
 | Model | balanced acc | top-1 | top-5 | macro-F1 |
 |---|---|---|---|---|
 | **B1 — Source-only** (exo → ego, zero-shot) | 0.034 | 0.042 | 0.162 | 0.026 |
-| **DANN (λ_max = 0.5)** — main result | **0.037** | **0.050** | **0.187** | **0.033** |
+| **DANN (λ_max = 0.5)** — main | **0.037** | **0.050** | **0.187** | **0.033** |
 | DANN (λ_max = 1.0) — ablation | 0.037 | 0.053 | 0.193 | 0.034 |
+| **MMD (λ_mmd = 1.0)** — main | **0.037** | **0.044** | **0.157** | **0.035** |
+| MMD (λ_mmd = 0.1) — ablation | 0.037 | 0.047 | 0.155 | 0.034 |
 | **B2 — Target-only oracle** (ego → ego, upper bound) | 0.063 | 0.068 | 0.235 | 0.060 |
 
 **Relative gains of DANN over B1:**
@@ -186,7 +188,25 @@ Yes, on **all four** reported metrics (top-1, top-5, balanced acc, macro-F1). Se
 [Barplot ordinato del gap per classe; tipicamente verbi che richiedono visione full-body (es. `Someone is smiling`, `Someone is laughing`) resistono di più al transfer da exo a ego, mentre le interazioni mano-oggetto (es. `Closing a door`, `Holding a cup/glass/bottle`) trasferiscono meglio. Sarà generato in Phase 7.]
 
 ### 5.5 DANN vs MMD
-[Confronto, tradeoff, quando uno batte l'altro — sarà popolato dopo Phase 6 (MMD trainer).]
+
+DANN and MMD reach **comparable balanced accuracy** on the target validation set (both ≈ 0.037), but via mechanistically different dynamics. The single most informative quantity is the source training accuracy at the end of the run:
+
+| Method | src_top1 (end of training) | val target balanced |
+|---|---|---|
+| B1 — Source-only | 0.330 | 0.034 |
+| DANN (λ_max = 0.5) | 0.190 | 0.037 |
+| MMD (λ_mmd = 1.0) | 0.335 | 0.037 |
+
+**DANN actively sacrifices source accuracy** to fool the domain discriminator: the encoder is pushed to produce embeddings that are uninformative to the discriminator, which by the data-processing inequality also discards a portion of the source class signal (`src_top1` drops from 0.33 to 0.19 over training). This is the adversarial price of domain alignment.
+
+**MMD preserves source learning** while still aligning the two distributions: `src_top1` matches the source-only B1 baseline (0.34) because the MMD loss only "regularises" the encoder embeddings to match the target statistics, without antagonising the classifier. The alignment is softer.
+
+Both reach the same target-balanced-accuracy, with two complementary fingerprints in the per-metric breakdown:
+
+- DANN has a higher top-1 (0.050 vs 0.044) and top-5 (0.187 vs 0.157) — it makes more confident, top-of-the-list predictions on the easy classes.
+- MMD has a marginally higher macro-F1 (0.035 vs 0.033) — it spreads its predictions more uniformly across the long tail.
+
+**Practical takeaway.** With single-frame ResNet-50 ImageNet features, the two methods are nearly equivalent in aggregate, but they encode different inductive biases. On a richer backbone (Phase 8 with TSM/SlowFast features) we expect their behaviours to diverge more visibly, with DANN typically dominating on stronger feature spaces (Ganin et al., 2016) and MMD remaining a robust low-variance alternative.
 
 ## 6. Conclusions and Limitations
 
