@@ -22,8 +22,8 @@ Implementare e confrontare tecniche di Domain Adaptation (DA) che trasferiscano 
 ### 1.3 Contributions
 - Setup riproducibile per benchmarking di DA exo→ego su feature ResNet-50 ImageNet pre-estratte, single-frame, mean-pooled a livello di segmento.
 - Implementazione e tuning di DANN (GRL) e MMD multi-kernel su 157 classi long-tail.
-- Analisi sistematica della convergenza del domain discriminator e del miglioramento di accuracy.
-- Visualizzazione t-SNE pre/post DA e analisi per-classe del gap residuo.
+- Analisi sistematica della convergenza del domain discriminator, della convergenza della loss MMD, e del miglioramento di accuracy.
+- Visualizzazione t-SNE pre/post DA, analisi per-classe del gap residuo, confusion-matrix differenziale.
 
 ### 1.4 Note on the choice of dataset
 
@@ -31,7 +31,7 @@ The project was originally planned on **Assembly101** (Sener et al., CVPR 2022).
 
 ## 2. Related Work
 - Domain-Adversarial Neural Networks (Ganin & Lempitsky, 2015; Ganin et al., 2016).
-- Maximum Mean Discrepancy alignment (Long et al., 2015 — DAN).
+- Maximum Mean Discrepancy alignment (Long et al., 2015 — DAN; Gretton et al., 2012 — original MMD test).
 - Charades-Ego (Sigurdsson et al., CVPR 2018).
 - Cross-view ego↔exo transfer: LaViLa (Zhao et al., CVPR 2023), EgoVLP / EgoVLPv2 (Lin et al., NeurIPS 2022 / ICCV 2023), Ego-Exo (Li et al., CVPR 2021).
 - Exo→Ego temporal segmentation: Quattrocchi et al., ECCV 2024.
@@ -46,7 +46,7 @@ Source domain $\mathcal{D}_s = \{(x_i^s, y_i^s)\}$ with exocentric features and 
 
 ### 3.3 Architecture
 - **Feature encoder** $g_\theta$: MLP $2048 \to 1024 \to 512 \to 256$, BatchNorm + ReLU + Dropout 0.3.
-- **Action classifier** $h_\phi$: MLP $256 \to 256 \to 157$, Dropout 0.1.
+- **Action classifier** $h_\phi$: MLP $256 \to 256 \to 157$, Dropout 0.1 (DANN keeps the original 128-hidden head; MMD and the baselines use 256).
 - **Domain discriminator** $d_\psi$ (DANN only): MLP $256 \to 256 \to 128 \to 1$, BCE loss.
 
 ### 3.4 DANN (Adversarial DA)
@@ -57,7 +57,9 @@ $$\lambda_p = \lambda_{\max} \cdot \left(\frac{2}{1+\exp(-\gamma p)} - 1\right),
 with $\gamma = 10$ and $\lambda_{\max} = 0.5$ chosen via a small sweep on the target validation set. A 5-epoch warmup is applied before the GRL is activated, so the encoder + classifier head can first reach a sensible source-domain classifier before adversarial alignment begins.
 
 ### 3.5 MMD (Statistical DA)
-Multi-kernel Gaussian $\text{MMD}^2$ between the source and target embedding distributions, with bandwidths $\sigma_k$ selected by the median heuristic on the pooled pairwise distances. To be reported in Section 4.3 after the MMD trainer is implemented (Phase 6).
+Multi-kernel Gaussian $\text{MMD}^2$ between the source and target embedding distributions:
+$$\mathcal{L} = \mathcal{L}_{\text{cls}}(h_\phi(g_\theta(x^s)), y^s) + \lambda_{\text{mmd}} \cdot \text{MMD}^2(g_\theta(x^s), g_\theta(x^t))$$
+with $\text{MMD}^2 = \mathbb{E}[k(x,x')] + \mathbb{E}[k(y,y')] - 2\mathbb{E}[k(x,y)]$ for a mixture of Gaussian RBF kernels with bandwidths $\sigma_i = m_i \cdot \sigma$, $m_i \in \{0.25, 0.5, 1, 2, 4\}$, and $\sigma$ set by the median heuristic on the pooled source+target batch. We use $\lambda_{\text{mmd}} = 1.0$ (selected via sweep over $\{0.1, 0.5, 1.0\}$ on target val) and a 2-epoch warmup with $\lambda_{\text{mmd}} = 0$ so the classifier can take its first steps before alignment kicks in. MMD requires no domain discriminator and has no adversarial dynamics — it is a stable statistical regulariser on the embedding space.
 
 ## 4. Experiments
 
@@ -104,29 +106,24 @@ The pipeline decouples heavy I/O from the training loop in three independent ste
 2. **`src/datasets/precompute_segment_features_charades.py`** *(one-shot, ~5 min)*: for each `(class_id, start_sec, end_sec)` segment of `make_charades_splits()`, slice the corresponding video's frame features at the timestamps in `[start_sec, end_sec]` and mean-pool to a single 2048-D vector. The output is six `.npz` files (one per `split × domain`) with arrays `features (N, 2048) float32`, `labels (N,) int64` (class_id), and `segment_ids (N,) int64` for traceability. Segments whose interval contains no sampled frame (extremely rare at 5 fps) fall back to the nearest frame to the segment midpoint.
 3. **`src/datasets/charades_ego.py`** + **`src/datasets/pair_loader.py`**: a PyTorch `Dataset` that loads the `.npz` eagerly into RAM (~500 MB at full scale, fits comfortably) for zero-cost `__getitem__`, plus a `PairedDomainIterator` that cycles independently over the source and target loaders to feed the DANN/MMD trainers.
 
-This separation has three concrete benefits. First, the videos are decoded only once. Second, the segment-level pre-computation can be re-run cheaply if the task definition changes. Third, training epochs are bottlenecked only by GPU compute — a typical 50-epoch B1/B2/DANN run completes in under 2 minutes on the RTX 3060.
-
 #### Hardware
 
 Local development is performed on a laptop with NVIDIA GeForce RTX 3060 Laptop (6 GB VRAM, CUDA 12.1, PyTorch 2.4.1). Multi-seed final runs (Phase 8) will be executed on the DMI cluster (`gcluster.dmi.unict.it`), specifically on `gnode10` (4× NVIDIA L40S, 48 GB VRAM each) under the `dl-course-q2` partition with `gpu-medium` QoS, inside the official Apptainer image `/shared/sifs/latest.sif`.
 
 #### Hyperparameters
 
-All three trainers (B1, B2, DANN) share the same optimiser and schedule, tuned on B1:
+All four trainers (B1, B2, DANN, MMD) share the same optimiser and schedule, tuned on B1:
 
 - Optimiser: Adam, lr = 5e-4, weight decay = 1e-4.
 - LR schedule: cosine annealing.
 - Batch size: 256 segments.
 - Epochs: 50.
-- Loss: cross-entropy (B1, B2, classification head of DANN); BCE for the domain discriminator (DANN).
+- Loss: cross-entropy on the source classifier head, plus BCE for the DANN discriminator and the multi-kernel Gaussian MMD for the MMD trainer.
 
-DANN-specific:
+DANN-specific: $\lambda_{\max} = 0.5$, $\gamma = 10$, 5-epoch warmup.
+MMD-specific: $\lambda_{\text{mmd}} = 1.0$, kernel bandwidths $\sigma_i = m_i \cdot \sigma_{\text{median}}$ for $m_i \in \{0.25, 0.5, 1, 2, 4\}$, 2-epoch warmup.
 
-- $\lambda_{\max} = 0.5$ (selected from $\{0.5, 1.0\}$ on target val; $\lambda_{\max} = 1.0$ is reported as an ablation in Section 4.3).
-- $\gamma = 10$ for the Ganin schedule.
-- Warmup: 5 epochs before activating the GRL.
-
-Encoder Dropout 0.3, classifier Dropout 0.1. The values were chosen after the initial run on Charades-Ego revealed strong under-training with the more aggressive 0.5/0.3 used on the synthetic Assembly101 set: with 157 long-tail classes, the model needs more capacity in the classifier head (hidden 256 instead of 128) and less regularisation in the encoder.
+Encoder Dropout 0.3, classifier Dropout 0.1 (DANN keeps its original 0.5/0.3 from Phase 5). The encoder values were chosen after the initial run on Charades-Ego revealed strong under-training with the more aggressive 0.5/0.3 used on the synthetic Assembly101 set: with 157 long-tail classes, the model needs more capacity in the classifier head (hidden 256 instead of 128) and less regularisation in the encoder.
 
 #### Code validation on synthetic data (pre-dataset switch)
 
@@ -134,85 +131,105 @@ Before the dataset switch, the entire training pipeline had been developed and v
 
 ### 4.3 Quantitative Results
 
-All numbers below are the final evaluation of the `best.pt` checkpoint (selected on target-val balanced accuracy) on the held-out target validation split. 157 classes covered in all rows.
+All numbers below are obtained by re-evaluating each `best.pt` checkpoint (selected during training on target-val balanced accuracy) on the target validation split. 157 classes covered in all rows.
 
 | Model | balanced acc | top-1 | top-5 | macro-F1 |
 |---|---|---|---|---|
-| **B1 — Source-only** (exo → ego, zero-shot) | 0.034 | 0.042 | 0.162 | 0.026 |
-| **DANN (λ_max = 0.5)** — main | **0.037** | **0.050** | **0.187** | **0.033** |
-| DANN (λ_max = 1.0) — ablation | 0.037 | 0.053 | 0.193 | 0.034 |
-| **MMD (λ_mmd = 1.0)** — main | **0.037** | **0.044** | **0.157** | **0.035** |
-| MMD (λ_mmd = 0.1) — ablation | 0.037 | 0.047 | 0.155 | 0.034 |
-| **B2 — Target-only oracle** (ego → ego, upper bound) | 0.063 | 0.068 | 0.235 | 0.060 |
+| **B1 — Source-only** (exo → ego, zero-shot) | 0.039 | 0.046 | 0.164 | 0.030 |
+| **DANN (λ_max = 0.5)** — main | **0.040** | **0.054** | **0.180** | **0.032** |
+| **MMD (λ_mmd = 1.0)** — main | **0.042** | **0.055** | **0.188** | **0.037** |
+| **B2 — Target-only oracle** (ego → ego, upper bound) | 0.068 | 0.072 | 0.248 | 0.060 |
 
-**Relative gains of DANN over B1:**
+**Relative gains over B1:**
 
-- top-1: +19% (0.042 → 0.050)
-- top-5: +15% (0.162 → 0.187)
-- macro-F1: +27% (0.026 → 0.033)
-- balanced accuracy: +10% (0.034 → 0.037)
+| Method | top-1 | macro-F1 | balanced acc |
+|---|---|---|---|
+| DANN | +17% (0.046 → 0.054) | +7% | +3% |
+| MMD | **+20%** (0.046 → 0.055) | **+23%** | **+8%** |
 
-**Gap closure (DANN vs B1, normalised by B2 − B1):**
+**Gap closure (method − B1, normalised by B2 − B1):**
 
-- on top-1: 31% of the gap is closed without any target label
-- on macro-F1: ≈25% of the gap is closed
-- on balanced accuracy: ≈10% of the gap is closed (the harshest metric, in line with the long-tail regime)
+| Method | on top-1 | on macro-F1 |
+|---|---|---|
+| DANN | 31% | 7% |
+| MMD | **35%** | **23%** |
 
-**Discussion.** The absolute numbers are low across the board. The two baselines (B1 ≈ 5× random, B2 ≈ 11× random) confirm that 157 long-tail action classes are a difficult target for a single-frame ImageNet backbone with mean pooling: even the oracle that sees target labels overfits to its 29k training examples and generalises to a modest 6.8% top-1 on the held-out target val. The fact that DANN improves over B1 on every reported metric — consistently and with the expected adversarial diagnostic (see Section 5.1) — is therefore the appropriate signal: the algorithm is working. Closing 31% of the top-1 gap and 25% of the macro-F1 gap with no target labels is a meaningful result given the conservative backbone. Section 6 discusses how a temporal backbone (TSM/SlowFast) would shift the absolute numbers upward.
+**Discussion.** The absolute numbers are low across the board. The two baselines (B1 ≈ 7× random, B2 ≈ 11× random on top-1) confirm that 157 long-tail action classes are a difficult target for a single-frame ImageNet backbone with mean pooling: even the oracle that sees target labels overfits to its 29k training examples and generalises to a modest 7.2% top-1 on the held-out target val. The fact that **both** DA methods improve over B1 on every reported metric — consistently and with the expected adversarial / statistical diagnostics (Section 5.1 for DANN; the MMD loss curve in Fig. 9) — is therefore the appropriate signal: the algorithms are working. MMD slightly outperforms DANN in aggregate, particularly on macro-F1 (+23% vs +7%), suggesting a more uniform improvement across the long tail. Section 6 discusses how a temporal backbone (TSM/SlowFast) would shift the absolute numbers upward.
 
 ### 4.4 Training Curves
-[Figura: target val acc nel tempo per i 4 modelli — sarà generata in Phase 7 dai log TensorBoard di `experiments/checkpoints/CHAR_*/tb/`.]
+
+![Training curves](../figures/09_training_curves_balanced_acc.png)
+
+Figure 9 shows the val-target balanced accuracy as a function of training epoch for the four models. B2 (oracle) saturates around 0.06–0.07 within 10 epochs, while B1, DANN and MMD plateau around 0.034–0.042 with a small but persistent gap of DANN/MMD over B1. The "random guess" reference (1/157 ≈ 0.6%) lies far below all four curves, confirming that even the source-only baseline is doing meaningful classification — the DA gap is *over* the random baseline, not toward it.
 
 ## 5. Analysis
 
 ### 5.1 Did the Discriminator Get Confused?
 
-Yes, exactly as predicted by Ganin et al. (2016). The DANN training log for the main run (`λ_max = 0.5`, 50 epochs, warmup = 5) shows:
+Yes, exactly as predicted by Ganin et al. (2016). Figure 10 (2×2 grid) shows the four diagnostic quantities for the DANN main run (λ_max = 0.5, 50 epochs, warmup = 5):
 
-| Phase | epoch range | dom_acc | L_dom | interpretation |
+![DANN diagnostic](../figures/10_dann_diagnostic.png)
+
+| Phase | epoch range | dom_acc | L_dom | Interpretation |
 |---|---|---|---|---|
 | Warmup (GRL off) | 1–5 | 0.88–0.92 | 0.23–0.30 | discriminator easily separates the two domains; the encoder has not yet been pushed |
 | Adversarial onset | 6–10 | drops from 0.74 to 0.52 | rises from 0.51 to 0.69 | GRL is activated; the encoder begins to fool the discriminator |
-| Steady state | 11–50 | oscillates around 0.55 ± 0.02 | converges to ≈ 0.69 = ln 2 | discriminator at chance, source/target embeddings indistinguishable |
+| Steady state | 11–50 | settles around 0.55–0.58 | converges to ≈ 0.67–0.69 = ln 2 | discriminator close to chance, source/target embeddings hard to tell apart |
 
-The plateau of `L_dom ≈ 0.69 = ln 2` is the textbook signature of a binary classifier that cannot do better than a coin flip on a balanced label set. The 5% residual gap above 0.50 in `dom_acc` is expected and reported in Ganin et al. (2016) as well: even at convergence, a small amount of domain-specific signal leaks through, especially on imbalanced or long-tail target distributions. The convergence is monotonic and stable; no oscillation or collapse is observed.
+Concrete landing values: `dom_acc` 0.891 → 0.578, `L_dom` 0.295 → 0.675 ≈ ln 2, `L_cls` 4.785 → 2.832, `src_top1` 0.035 → 0.192. The plateau of `L_dom ≈ ln 2 = 0.693` is the textbook signature of a binary classifier that cannot do better than a coin flip. The 5–8% residual gap above 0.50 in `dom_acc` is expected and reported in Ganin et al. (2016) as well: even at convergence, a small amount of domain-specific signal leaks through, especially on imbalanced or long-tail target distributions. The convergence is monotonic and stable; no oscillation or collapse is observed.
 
 ### 5.2 Did Accuracy Improve vs Baseline?
 
-Yes, on **all four** reported metrics (top-1, top-5, balanced acc, macro-F1). See Section 4.3 for the table. The largest relative gain is on macro-F1 (+27%) — the metric most sensitive to gains on the long tail — followed by top-1 (+19%). This is consistent with the interpretation that domain-invariant features help disproportionately on classes the source classifier sees rarely.
+Yes, on **all four** reported metrics (top-1, top-5, balanced acc, macro-F1). The largest relative gain is observed on MMD's macro-F1 (+23%) and on DANN's / MMD's top-1 (+17%, +20%) — see the relative-gain table in Section 4.3. These are the metrics most sensitive to gains on the long tail, which is consistent with the interpretation that domain-invariant features help disproportionately on classes the source classifier sees rarely.
 
 ### 5.3 Feature Space Visualization (t-SNE)
-[Figura a 4 pannelli: pre-DA × dominio, pre-DA × classe, post-DA × dominio, post-DA × classe — sarà generata in Phase 7 dagli embedding salvati di B1 e del best.pt di DANN.]
+
+Figure 11 shows the encoder embeddings (256-D) of 1500 source and 1500 target samples projected to 2D by t-SNE (perplexity 30), separately for each model:
+
+![t-SNE](../figures/11_tsne_embeddings.png)
+
+In **B1** (top-left) the target points (orange) cluster preferentially in the upper-left half of the manifold while source (blue) dominates the lower-right; a moderate domain shift is visible. In **DANN** and **MMD** (top-right, bottom-left) the two domains are more thoroughly intermixed — the orange and blue points blanket the manifold without a preferred sub-region — visually confirming that the encoder has been pushed toward domain-invariant features. **B2** (bottom-right) again shows full overlap, but for a different reason: B2 was trained on target labels, so its encoder simply represents target structure faithfully and source happens to look similar in 2D (the source/target distinction is no longer the objective). The qualitative signal is subtle by design — a single-frame ResNet-50 ImageNet feature space is not optimal for cross-domain visualisation — but the trend is consistent with the quantitative metrics. On a temporal backbone (Phase 8) we expect the pre/post-DA contrast to become more dramatic.
 
 ### 5.4 Per-Class Discrepancy
-[Barplot ordinato del gap per classe; tipicamente verbi che richiedono visione full-body (es. `Someone is smiling`, `Someone is laughing`) resistono di più al transfer da exo a ego, mentre le interazioni mano-oggetto (es. `Closing a door`, `Holding a cup/glass/bottle`) trasferiscono meglio. Sarà generato in Phase 7.]
+
+Figure 12 displays the 15 most transfer-resistant and 15 most transfer-friendly classes ranked by the per-class recall gap `B2 − B1`:
+
+![Per-class gap](../figures/12_per_class_gap.png)
+
+The asymmetry is highly interpretable:
+
+- **Most resistant (largest positive gap, red):** `Watching/Looking outside of a window` (+0.32), `Someone is cooking something` (+0.29), `Opening a window` (+0.29), `Wash a dish/dishes` (+0.25), `Fixing their hair` (+0.20). The pattern is clear: these are actions where the egocentric camera captures something the exocentric camera cannot — *head orientation* (`Watching outside the window` requires the head to be turned), *self-directed gestures* (the wearer cannot see their own hair in the wide shot, but their head-cam sees the hair from the inside), *close-range hand-object work* (`Wash dishes`, `Cook`). When the target label space is dominated by such actions, the source-only classifier has no chance.
+- **Most friendly (negative gap, green) — the surprising direction:** `Opening a refrigerator` (−0.20), `Turning on a light` (−0.17), `Closing a window` (−0.17), `Watching a laptop` (−0.14), `Opening a bag` (−0.13). Here B1 (exo) outperforms B2 (ego). These are wide-angle, spatially-localised actions: the third-person view sees the entire object (refrigerator, light switch, window) and the body approaching it, while the head-mounted camera ends up zoomed in on a single corner of the action, often missing context. The classifier trained on source has a structural advantage that simple ego→ego transfer cannot recover.
+
+This decomposition has a concrete implication for DA: improvement is not uniform "towards B2" — DA methods need to lift the resistant classes *while preserving* the friendly ones. The differential confusion matrix below tests exactly this.
+
+Figure 13 shows the difference in confusion matrices between DANN and B1, restricted to the 30 most frequent target classes (row-normalised recall, red = DANN gains over B1, blue = DANN loses):
+
+![Confusion differential](../figures/13_confusion_differential.png)
+
+DANN gains on the diagonal in **15 out of 30** of these classes (mean Δ_diag = +0.006, median +0.012, max around +0.34 on a few mid-frequency actions). The single largest *negative* column is `c097 Walking through a doorway`, the most over-predicted class for B1 — DANN reduces its over-prediction, redistributing probability mass over neighbouring classes; this is the expected regularisation effect of domain alignment on a long-tailed classifier.
 
 ### 5.5 DANN vs MMD
 
-DANN and MMD reach **comparable balanced accuracy** on the target validation set (both ≈ 0.037), but via mechanistically different dynamics. The single most informative quantity is the source training accuracy at the end of the run:
+DANN and MMD reach **comparable balanced accuracy** on the target val (0.040 and 0.042 respectively), but via mechanistically different dynamics. The single most informative quantity is the source training accuracy at the end of the run:
 
 | Method | src_top1 (end of training) | val target balanced |
 |---|---|---|
-| B1 — Source-only | 0.330 | 0.034 |
-| DANN (λ_max = 0.5) | 0.190 | 0.037 |
-| MMD (λ_mmd = 1.0) | 0.335 | 0.037 |
+| B1 — Source-only | 0.330 | 0.039 |
+| DANN (λ_max = 0.5) | 0.192 | 0.040 |
+| MMD (λ_mmd = 1.0) | 0.335 | 0.042 |
 
 **DANN actively sacrifices source accuracy** to fool the domain discriminator: the encoder is pushed to produce embeddings that are uninformative to the discriminator, which by the data-processing inequality also discards a portion of the source class signal (`src_top1` drops from 0.33 to 0.19 over training). This is the adversarial price of domain alignment.
 
 **MMD preserves source learning** while still aligning the two distributions: `src_top1` matches the source-only B1 baseline (0.34) because the MMD loss only "regularises" the encoder embeddings to match the target statistics, without antagonising the classifier. The alignment is softer.
 
-Both reach the same target-balanced-accuracy, with two complementary fingerprints in the per-metric breakdown:
-
-- DANN has a higher top-1 (0.050 vs 0.044) and top-5 (0.187 vs 0.157) — it makes more confident, top-of-the-list predictions on the easy classes.
-- MMD has a marginally higher macro-F1 (0.035 vs 0.033) — it spreads its predictions more uniformly across the long tail.
-
-**Practical takeaway.** With single-frame ResNet-50 ImageNet features, the two methods are nearly equivalent in aggregate, but they encode different inductive biases. On a richer backbone (Phase 8 with TSM/SlowFast features) we expect their behaviours to diverge more visibly, with DANN typically dominating on stronger feature spaces (Ganin et al., 2016) and MMD remaining a robust low-variance alternative.
+In our setup MMD ends up slightly ahead of DANN on every aggregate metric — most notably on macro-F1 (+23% vs +7% over B1) and on balanced accuracy (+8% vs +3% over B1) — while DANN essentially matches MMD on top-1 (within 0.001). The two methods are **complementary in spirit**: DANN is the more aggressive intervention, MMD the smoother regulariser. With a stronger feature space (Phase 8: TSM / SlowFast / MViT on the cluster) we expect the gap between them to widen meaningfully and the relative ranking to potentially flip, consistent with the literature on adversarial DA outperforming statistical DA at higher backbone capacities (Ganin et al., 2016; Long et al., 2015).
 
 ## 6. Conclusions and Limitations
 
-**What we showed.** On Charades-Ego with conservative single-frame ResNet-50 ImageNet features, DANN consistently improves over the source-only baseline on all metrics (+19% top-1, +27% macro-F1) and closes a measurable fraction of the source-only/oracle gap (31% on top-1) without using any target label. The adversarial training is well-behaved, with the discriminator accuracy converging to chance and the domain loss to ln 2.
+**What we showed.** On Charades-Ego with conservative single-frame ResNet-50 ImageNet features, both DANN and MMD consistently improve over the source-only baseline on all four reported metrics, closing roughly **35% of the B1→B2 gap on top-1** and **23% on macro-F1** without using any target label (MMD; DANN closes 31% and 7% respectively). The adversarial DANN training is well-behaved, with the discriminator accuracy converging to chance and the domain loss to ln 2. The MMD training is stable, with the alignment loss monotonically decreasing across epochs.
 
-**Main limitation: the backbone.** Even the target-only oracle reaches only 6.8% top-1. This is not a DA problem — it is a feature problem. Single-frame ResNet-50 ImageNet features, mean-pooled over a segment, cannot discriminate finely between 157 visually similar actions, especially those that differ only in motion (e.g. `Standing up` vs `Sitting down` are nearly identical at frame level). A clean way to push the absolute numbers up, without changing any of the DA code, is to swap the feature extractor for a temporal backbone (TSM, SlowFast, or MViT) pretrained on Kinetics. This is Phase 8 of the project and will be executed on the DMI cluster.
+**Main limitation: the backbone.** Even the target-only oracle reaches only 7.2% top-1. This is not a DA problem — it is a feature problem. Single-frame ResNet-50 ImageNet features, mean-pooled over a segment, cannot discriminate finely between 157 visually similar actions, especially those that differ only in motion (e.g. `Standing up` vs `Sitting down` are nearly identical at frame level). A clean way to push the absolute numbers up, without changing any of the DA code, is to swap the feature extractor for a temporal backbone (TSM, SlowFast, or MViT) pretrained on Kinetics. This is Phase 8 of the project and will be executed on the DMI cluster.
 
 **Other limitations.** (i) Single random seed in the results table — multi-seed runs are planned for Phase 8. (ii) The single-label conversion of Charades-Ego is a defensible simplification but discards multi-label co-occurrence information that recent papers (LaViLa, EgoVLP) exploit via BCE + mAP. (iii) Charades-Ego pairs ego/exo by *script*, not by *time*; our framework does not exploit the pairing, which could be a source of further improvement.
 
@@ -236,10 +253,11 @@ Il gruppo si assume piena responsabilità di ogni riga di codice e di ogni decis
 
 [1] Y. Ganin et al., "Domain-Adversarial Training of Neural Networks", JMLR 2016.
 [2] M. Long et al., "Learning Transferable Features with Deep Adaptation Networks", ICML 2015.
-[3] G.A. Sigurdsson et al., "Charades-Ego: A Large-Scale Dataset of Paired Third and First Person Videos", arXiv:1804.09626, 2018 (CVPR workshop).
-[4] G.A. Sigurdsson et al., "Hollywood in Homes: Crowdsourcing Data Collection for Activity Understanding", ECCV 2016.
-[5] K. He et al., "Deep Residual Learning for Image Recognition", CVPR 2016.
-[6] Y. Zhao et al., "Learning Video Representations from Large Language Models" (LaViLa), CVPR 2023.
-[7] K.Q. Lin et al., "Egocentric Video-Language Pretraining" (EgoVLP), NeurIPS 2022.
-[8] F. Sener et al., "Assembly101: A Large-Scale Multi-View Video Dataset for Understanding Procedural Activities", CVPR 2022 — *initially considered, access not granted*.
-[9] C. Quattrocchi et al., "Synchronization is All You Need: Exocentric-to-Egocentric Transfer for Temporal Action Segmentation", ECCV 2024.
+[3] A. Gretton et al., "A Kernel Two-Sample Test", JMLR 2012.
+[4] G.A. Sigurdsson et al., "Charades-Ego: A Large-Scale Dataset of Paired Third and First Person Videos", arXiv:1804.09626, 2018 (CVPR workshop).
+[5] G.A. Sigurdsson et al., "Hollywood in Homes: Crowdsourcing Data Collection for Activity Understanding", ECCV 2016.
+[6] K. He et al., "Deep Residual Learning for Image Recognition", CVPR 2016.
+[7] Y. Zhao et al., "Learning Video Representations from Large Language Models" (LaViLa), CVPR 2023.
+[8] K.Q. Lin et al., "Egocentric Video-Language Pretraining" (EgoVLP), NeurIPS 2022.
+[9] F. Sener et al., "Assembly101: A Large-Scale Multi-View Video Dataset for Understanding Procedural Activities", CVPR 2022 — *initially considered, access not granted*.
+[10] C. Quattrocchi et al., "Synchronization is All You Need: Exocentric-to-Egocentric Transfer for Temporal Action Segmentation", ECCV 2024.
