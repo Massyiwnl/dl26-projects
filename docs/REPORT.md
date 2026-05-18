@@ -125,6 +125,10 @@ MMD-specific: $\lambda_{\text{mmd}} = 1.0$, kernel bandwidths $\sigma_i = m_i \c
 
 Encoder Dropout 0.3, classifier Dropout 0.1 (DANN keeps its original 0.5/0.3 from Phase 5). The encoder values were chosen after the initial run on Charades-Ego revealed strong under-training with the more aggressive 0.5/0.3 used on the synthetic Assembly101 set: with 157 long-tail classes, the model needs more capacity in the classifier head (hidden 256 instead of 128) and less regularisation in the encoder.
 
+#### Multi-seed protocol (cluster)
+
+All numbers in the results table (Section 4.3) are mean ± std over 3 random seeds (42, 123, 7), executed on the DMI cluster `gnode10` (NVIDIA L40S) inside the official Apptainer image (`/shared/sifs/latest.sif`, PyTorch 2.7.1 + CUDA 11.8). All 12 runs (4 methods × 3 seeds) were driven by a single SLURM sbatch script that loops sequentially through the seed × method grid, since the user quota on this cluster is `MaxSubmitJobsPU=1`. Wall-clock on the L40S: about 8 minutes for the entire 12-run sweep (single-frame mean-pooled features make each training extremely fast). The aggregation step (`src/evaluation/aggregate_multi_seed.py`) re-evaluates each `best.pt` on the target val split and reports per-seed metrics plus mean ± std. Standard deviations are uniformly small (≤ 0.008 on top-5, ≤ 0.004 on the other metrics), confirming that the relative ranking of the methods is stable across initialisations.
+
 #### Code validation on synthetic data (pre-dataset switch)
 
 Before the dataset switch, the entire training pipeline had been developed and validated on a controlled synthetic dataset that matched the original Assembly101 annotations 1:1 (130k segments, 24 verb classes, official train/val/test partition) but synthesised per-segment 2048-D features from a per-class signal in a 200-D subspace, plus a non-linear per-domain transform (QR-orthogonal rotation on a 512-D subspace, element-wise `tanh` squashing). On that synthetic set, DANN closed **81.6%** of the source-only/oracle gap on balanced accuracy, with the discriminator accuracy converging to 0.50 as predicted. *Those synthetic numbers were code-validation only and are not reported in the results table below*; they confirmed correctness of the GRL implementation, the schedule, the encoder/discriminator interaction, and the metric pipeline before any real-data training.
@@ -135,26 +139,34 @@ All numbers below are obtained by re-evaluating each `best.pt` checkpoint (selec
 
 | Model | balanced acc | top-1 | top-5 | macro-F1 |
 |---|---|---|---|---|
-| **B1 — Source-only** (exo → ego, zero-shot) | 0.039 | 0.046 | 0.164 | 0.030 |
-| **DANN (λ_max = 0.5)** — main | **0.040** | **0.054** | **0.180** | **0.032** |
-| **MMD (λ_mmd = 1.0)** — main | **0.042** | **0.055** | **0.188** | **0.037** |
-| **B2 — Target-only oracle** (ego → ego, upper bound) | 0.068 | 0.072 | 0.248 | 0.060 |
+| **B1 — Source-only** (exo → ego, zero-shot) | 0.041 ± 0.001 | 0.047 ± 0.002 | 0.162 ± 0.007 | 0.030 ± 0.004 |
+| **DANN (λ_max = 0.5)** — main | **0.041 ± 0.001** | **0.053 ± 0.001** | **0.188 ± 0.002** | **0.036 ± 0.002** |
+| **MMD (λ_mmd = 1.0)** — main | **0.042 ± 0.001** | **0.053 ± 0.003** | **0.188 ± 0.008** | **0.032 ± 0.002** |
+| **B2 — Target-only oracle** (ego → ego, upper bound) | 0.067 ± 0.003 | 0.073 ± 0.003 | 0.243 ± 0.005 | 0.058 ± 0.003 |
 
-**Relative gains over B1:**
+All numbers are mean ± std over 3 random seeds (42, 123, 7), trained on the DMI cluster (`gnode10`, NVIDIA L40S) under a single sbatch driver running 12 sequential trainings (4 methods × 3 seeds) inside the `base-runtime-03.2026` Apptainer image. End-to-end wall-clock: ~8 minutes for all 12 runs.
 
-| Method | top-1 | macro-F1 | balanced acc |
-|---|---|---|---|
-| DANN | +17% (0.046 → 0.054) | +7% | +3% |
-| MMD | **+20%** (0.046 → 0.055) | **+23%** | **+8%** |
+**Relative gains over B1 (significance: number of std distances between method and B1):**
+
+| Method | top-1 | top-5 | macro-F1 | balanced acc |
+|---|---|---|---|---|
+| DANN | +13% (~3σ) | +16% (~3σ) | +20% (~1.5σ) | 0% (no diff) |
+| MMD | +13% (~2σ) | +16% (~3σ) | +7% (marginal) | +2% (marginal) |
 
 **Gap closure (method − B1, normalised by B2 − B1):**
 
-| Method | on top-1 | on macro-F1 |
-|---|---|---|
-| DANN | 31% | 7% |
-| MMD | **35%** | **23%** |
+| Method | on top-1 | on top-5 | on macro-F1 |
+|---|---|---|---|
+| DANN | 23% | 32% | 21% |
+| MMD | 23% | 32% | 7% |
 
-**Discussion.** The absolute numbers are low across the board. The two baselines (B1 ≈ 7× random, B2 ≈ 11× random on top-1) confirm that 157 long-tail action classes are a difficult target for a single-frame ImageNet backbone with mean pooling: even the oracle that sees target labels overfits to its 29k training examples and generalises to a modest 7.2% top-1 on the held-out target val. The fact that **both** DA methods improve over B1 on every reported metric — consistently and with the expected adversarial / statistical diagnostics (Section 5.1 for DANN; the MMD loss curve in Fig. 9) — is therefore the appropriate signal: the algorithms are working. MMD slightly outperforms DANN in aggregate, particularly on macro-F1 (+23% vs +7%), suggesting a more uniform improvement across the long tail. Section 6 discusses how a temporal backbone (TSM/SlowFast) would shift the absolute numbers upward.
+**Discussion.** The absolute numbers are low across the board. The two baselines (B1 ≈ 7× random, B2 ≈ 11× random on top-1) confirm that 157 long-tail action classes are a difficult target for a single-frame ImageNet backbone with mean pooling: even the oracle that sees target labels overfits to its 29k training examples and generalises to a modest 7.3% top-1 on the held-out target val. With error bars from three random seeds we can decompose where DA helps:
+
+- **Top-1 and top-5 see a robust, statistically significant improvement** under both DANN and MMD (about 3 standard deviations above the B1 baseline on top-5, the metric with the largest absolute gap). DA produces more confident predictions on the easier classes.
+- **Balanced accuracy does not improve significantly.** Across 3 seeds, DANN matches B1 (0.041 vs 0.041) and MMD is only marginally above (0.042 vs 0.041) — both within 1σ. The metric most sensitive to the long tail is therefore not the one that benefits the most from alignment in this setup.
+- **DANN and MMD are statistically equivalent in aggregate.** Their confidence intervals overlap on every reported metric. The single-seed table of PR #9/#10 showed MMD slightly ahead — that ordering does not survive multi-seed evaluation.
+
+Section 6 discusses how a temporal backbone (TSM, SlowFast, or MViT pretrained on Kinetics) would shift all four numbers upward and likely amplify the DA gap, consistent with the literature.
 
 ### 4.4 Training Curves
 
@@ -211,19 +223,19 @@ DANN gains on the diagonal in **15 out of 30** of these classes (mean Δ_diag = 
 
 ### 5.5 DANN vs MMD
 
-DANN and MMD reach **comparable balanced accuracy** on the target val (0.040 and 0.042 respectively), but via mechanistically different dynamics. The single most informative quantity is the source training accuracy at the end of the run:
+In aggregate, multi-seed DANN and MMD are **statistically equivalent**: their confidence intervals overlap on all four reported metrics (balanced acc, top-1, top-5, macro-F1). The single-seed numbers in PR #9/#10 had shown MMD slightly ahead; that ordering does not survive multi-seed evaluation. However, the two methods reach this comparable end-point via mechanistically very different dynamics, which is the more informative observation. The single most diagnostic quantity is the source training accuracy at the end of the run (seed 42 numbers, consistent across seeds within ±0.01):
 
-| Method | src_top1 (end of training) | val target balanced |
+| Method | src_top1 (end of training) | val target balanced (mean ± std) |
 |---|---|---|
-| B1 — Source-only | 0.330 | 0.039 |
-| DANN (λ_max = 0.5) | 0.192 | 0.040 |
-| MMD (λ_mmd = 1.0) | 0.335 | 0.042 |
+| B1 — Source-only | 0.330 | 0.041 ± 0.001 |
+| DANN (λ_max = 0.5) | 0.192 | 0.041 ± 0.001 |
+| MMD (λ_mmd = 1.0) | 0.335 | 0.042 ± 0.001 |
 
 **DANN actively sacrifices source accuracy** to fool the domain discriminator: the encoder is pushed to produce embeddings that are uninformative to the discriminator, which by the data-processing inequality also discards a portion of the source class signal (`src_top1` drops from 0.33 to 0.19 over training). This is the adversarial price of domain alignment.
 
 **MMD preserves source learning** while still aligning the two distributions: `src_top1` matches the source-only B1 baseline (0.34) because the MMD loss only "regularises" the encoder embeddings to match the target statistics, without antagonising the classifier. The alignment is softer.
 
-In our setup MMD ends up slightly ahead of DANN on every aggregate metric — most notably on macro-F1 (+23% vs +7% over B1) and on balanced accuracy (+8% vs +3% over B1) — while DANN essentially matches MMD on top-1 (within 0.001). The two methods are **complementary in spirit**: DANN is the more aggressive intervention, MMD the smoother regulariser. With a stronger feature space (Phase 8: TSM / SlowFast / MViT on the cluster) we expect the gap between them to widen meaningfully and the relative ranking to potentially flip, consistent with the literature on adversarial DA outperforming statistical DA at higher backbone capacities (Ganin et al., 2016; Long et al., 2015).
+Despite reaching essentially the same aggregate accuracy on the target, the two paths have different implications. DANN is the appropriate choice when source labels are abundant and only target performance matters (one is willing to trade source accuracy for transfer). MMD is appropriate when source accuracy must also be preserved (e.g., joint deployment on both views, or when the source labels are also of intrinsic interest). With a stronger feature space (Phase 8 Day 2: SlowFast on the cluster) we expect the gap between the two to widen meaningfully and possibly reveal a clearer winner, consistent with the literature on adversarial DA outperforming statistical DA at higher backbone capacities (Ganin et al., 2016; Long et al., 2015).
 
 ## 6. Conclusions and Limitations
 
