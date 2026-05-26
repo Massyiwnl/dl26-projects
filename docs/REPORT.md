@@ -1,267 +1,269 @@
-# Domain Adaptation for Action Recognition — Exocentric → Egocentric
+# Adattamento di Dominio per il Riconoscimento delle Azioni — Esocentrico → Egocentrico
 
 **Group ID:** CassiaBranca
 **Project ID:** 7
-**Members:** Massimiliano Cassia (1000016487), Martina Brancaforte ()
-**Course:** Deep Learning, A.A. 2025/26 — Prof. A. Furnari, Università di Catania
+**Membri:** Massimiliano Cassia (1000016487), Martina Brancaforte (1000015074)
+**Corso:** Deep Learning, A.A. 2025/26 — Prof. A. Furnari, Università di Catania
 
 ---
 
 ## Abstract
 
-[Da scrivere alla fine — 150-250 parole. Cosa abbiamo fatto, cosa abbiamo trovato, numero chiave del miglioramento.]
+Studiamo l'adattamento di dominio non supervisionato (UDA) per il riconoscimento delle azioni sotto il cambiamento di punto di vista esocentrico-egocentrico, un contesto in cui i modelli addestrati su riprese in terza persona non riescono a trasferirsi a registrazioni di telecamere montate sulla testa a causa di cambiamenti di prospettiva, auto-occlusione e disallineamento delle statistiche di sfondo. Utilizzando Charades-Ego — un dataset ego/exo appaiato di 7.860 video su 157 classi di azioni — assegniamo la vista in terza persona come dominio sorgente etichettato e la vista in prima persona come dominio target non etichettato. Le feature vengono pre-estratte con ResNet-50 (ImageNet-1K, 2048-D, mean-pooled per segmento), mantenendo deliberatamente il backbone conservativo per isolare il contributo della loss di allineamento da quello di un feature extractor più potente.
 
-## 1. Introduction
+Implementiamo e confrontiamo due approcci di DA: le Domain-Adversarial Neural Network (DANN) con Gradient Reversal Layer (GRL) secondo Ganin et al. (2016), e l'allineamento con Maximum Mean Discrepancy (MMD) multi-kernel secondo Long et al. (2015). Rispetto a una baseline source-only zero-shot (B1) e a un oracle target-supervised (B2), entrambi i metodi apportano miglioramenti consistenti rispetto a B1: DANN ottiene +13% top-1, +16% top-5 e +20% macro-F1, chiudendo rispettivamente il 23% e il 32% del gap B1→B2 su top-1 e top-5; MMD raggiunge gli stessi guadagni su top-1/top-5 con +7% macro-F1. Il discriminatore di dominio DANN converge a un'accuracy quasi casuale (0,578, epoca 50) con domain loss che si avvicina a ln 2 = 0,693, confermando una confusione di dominio riuscita. La visualizzazione t-SNE mostra gli embedding sorgente e target che si mescolano dopo l'adattamento; l'analisi per classe rivela che le azioni di orientamento della testa e di interazione ravvicinata mano-oggetto resistono maggiormente al trasferimento, mentre le azioni spazialmente localizzate a campo visivo ampio si trasferiscono agevolmente. Tutti i numeri sono media ± std su 3 semi casuali sul cluster DMI (NVIDIA L40S).
 
-### 1.1 Motivation
+## 1. Introduzione
+
+### 1.1 Motivazione
 Modelli di action recognition addestrati su viste esocentriche (telecamere fisse, footage YouTube) collassano se applicati a viste egocentriche (smart glasses) per via dello shift di prospettiva, occlusione, statistiche di sfondo. Questa è una barriera critica al deploy reale.
 
-### 1.2 Goal
+### 1.2 Obiettivo
 Implementare e confrontare tecniche di Domain Adaptation (DA) che trasferiscano la conoscenza semantica da source esocentrico labeled a target egocentrico unlabeled, sul dataset **Charades-Ego** (Sigurdsson et al., CVPR 2018), benchmark standard per il problema cross-view ego↔exo.
 
-### 1.3 Contributions
+### 1.3 Contributi
 - Setup riproducibile per benchmarking di DA exo→ego su feature ResNet-50 ImageNet pre-estratte, single-frame, mean-pooled a livello di segmento.
 - Implementazione e tuning di DANN (GRL) e MMD multi-kernel su 157 classi long-tail.
 - Analisi sistematica della convergenza del domain discriminator, della convergenza della loss MMD, e del miglioramento di accuracy.
 - Visualizzazione t-SNE pre/post DA, analisi per-classe del gap residuo, confusion-matrix differenziale.
 
-### 1.4 Note on the choice of dataset
+### 1.4 Nota sulla scelta del dataset
 
-The project was originally planned on **Assembly101** (Sener et al., CVPR 2022). Access to the official LMDB feature distribution was repeatedly denied by the authors over a period of two weeks. Annotation access was granted, but features were not — and the authors did not respond to follow-up requests. After consulting with the course instructor (Prof. Furnari, email exchange of May 11, 2026), we switched to **Charades-Ego**, which (i) has a native paired ego/exo setup, (ii) is a standard cross-view benchmark in recent literature (LaViLa CVPR'23, EgoVLP ICCV'23), and (iii) is directly downloadable from Allen AI with no licensing wait. The DA framework code is dataset-agnostic above the segment-level `.npz`, so the switch required changing only the parser, the feature extractor, and the segment-precompute script.
+Il progetto era originariamente pianificato su **Assembly101** (Sener et al., CVPR 2022). L'accesso alla distribuzione ufficiale delle feature LMDB è stato ripetutamente negato dagli autori nel corso di due settimane. L'accesso alle annotazioni è stato concesso, ma non alle feature — e gli autori non hanno risposto alle richieste successive. Dopo aver consultato il docente del corso (Prof. Furnari, scambio email dell'11 maggio 2026), siamo passati a **Charades-Ego**, che (i) presenta una configurazione ego/exo appaiata nativa, (ii) è un benchmark cross-view standard nella letteratura recente (LaViLa CVPR'23, EgoVLP ICCV'23), e (iii) è scaricabile direttamente da Allen AI senza attese per la licenza. Il codice del framework di DA è dataset-agnostico al di sopra del `.npz` a livello di segmento, quindi il passaggio ha richiesto solo la modifica del parser, del feature extractor e dello script di precomputo dei segmenti.
 
-## 2. Related Work
-- Domain-Adversarial Neural Networks (Ganin & Lempitsky, 2015; Ganin et al., 2016).
-- Maximum Mean Discrepancy alignment (Long et al., 2015 — DAN; Gretton et al., 2012 — original MMD test).
+## 2. Lavori Correlati
+- Reti Neurali Domain-Adversariali (Ganin & Lempitsky, 2015; Ganin et al., 2016).
+- Allineamento con Maximum Mean Discrepancy (Long et al., 2015 — DAN; Gretton et al., 2012 — test MMD originale).
 - Charades-Ego (Sigurdsson et al., CVPR 2018).
-- Cross-view ego↔exo transfer: LaViLa (Zhao et al., CVPR 2023), EgoVLP / EgoVLPv2 (Lin et al., NeurIPS 2022 / ICCV 2023), Ego-Exo (Li et al., CVPR 2021).
-- Exo→Ego temporal segmentation: Quattrocchi et al., ECCV 2024.
+- Trasferimento cross-view ego↔exo: LaViLa (Zhao et al., CVPR 2023), EgoVLP / EgoVLPv2 (Lin et al., NeurIPS 2022 / ICCV 2023), Ego-Exo (Li et al., CVPR 2021).
+- Segmentazione temporale Exo→Ego: Quattrocchi et al., ECCV 2024.
 
-## 3. Method
+## 3. Metodi
 
-### 3.1 Problem Setup
-Source domain $\mathcal{D}_s = \{(x_i^s, y_i^s)\}$ with exocentric features and 157 action labels; target domain $\mathcal{D}_t = \{x_j^t\}$ with egocentric features and no labels at training time. The label space $\mathcal{Y} = \{0, \dots, 156\}$ is shared. The DA goal is to train a classifier on labelled source plus unlabelled target that generalises to the unseen target test set.
+### 3.1 Definizione del Problema
+Dominio sorgente $\mathcal{D}_s = \{(x_i^s, y_i^s)\}$ con feature esocentriche e 157 etichette di azione; dominio target $\mathcal{D}_t = \{x_j^t\}$ con feature egocentriche e nessuna etichetta durante il training. Lo spazio delle etichette $\mathcal{Y} = \{0, \dots, 156\}$ è condiviso. L'obiettivo della DA è addestrare un classificatore su sorgente etichettato più target non etichettato che generalizzi al test set target non visto.
 
-### 3.2 Feature Backbone
-**ResNet-50** pretrained on ImageNet-1K (`IMAGENET1K_V2` weights), with the final classification head replaced by Identity to expose the 2048-D pre-fc embedding. We sample frames at 5 fps, apply standard ImageNet preprocessing (short-side resize 256 + center crop 224 + normalisation), and mean-pool all sampled frames falling inside `[start_sec, end_sec]` to obtain one 2048-D vector per segment. This is a deliberately conservative backbone for two reasons: (i) it makes feature extraction tractable on a laptop GPU, allowing rapid iteration of the DA algorithms; (ii) it provides a clean lower bound — any improvement of DANN/MMD over the source-only baseline is unambiguously attributable to the alignment loss, not to a stronger backbone. Section 6 discusses temporal alternatives (TSM, SlowFast, MViT) as future work.
+### 3.2 Backbone per l'Estrazione delle Feature
+**ResNet-50** pre-addestrata su ImageNet-1K (pesi `IMAGENET1K_V2`), con la testa di classificazione finale sostituita da Identity per esporre l'embedding pre-fc a 2048-D. I frame vengono campionati a 5 fps, con preprocessing ImageNet standard (ridimensionamento lato corto a 256 + center crop 224 + normalizzazione), e tutti i frame campionati nell'intervallo `[start_sec, end_sec]` vengono mean-pooled per ottenere un vettore da 2048-D per segmento. Si tratta di un backbone deliberatamente conservativo per due motivi: (i) rende l'estrazione delle feature realizzabile su una GPU laptop, consentendo iterazioni rapide degli algoritmi di DA; (ii) fornisce un lower bound pulito — qualsiasi miglioramento di DANN/MMD rispetto alla baseline source-only è inequivocabilmente attribuibile alla loss di allineamento, non a un backbone più potente. La Sezione 6 discute le alternative temporali (TSM, SlowFast, MViT) come lavoro futuro.
 
-### 3.3 Architecture
+### 3.3 Architettura
 - **Feature encoder** $g_\theta$: MLP $2048 \to 1024 \to 512 \to 256$, BatchNorm + ReLU + Dropout 0.3.
-- **Action classifier** $h_\phi$: MLP $256 \to 256 \to 157$, Dropout 0.1 (DANN keeps the original 128-hidden head; MMD and the baselines use 256).
-- **Domain discriminator** $d_\psi$ (DANN only): MLP $256 \to 256 \to 128 \to 1$, BCE loss.
+- **Classificatore di azioni** $h_\phi$: MLP $256 \to 256 \to 157$, Dropout 0.1 (DANN mantiene la testa hidden originale a 128; MMD e le baseline usano 256).
+- **Discriminatore di dominio** $d_\psi$ (solo DANN): MLP $256 \to 256 \to 128 \to 1$, BCE loss.
 
-### 3.4 DANN (Adversarial DA)
-Total loss
+### 3.4 DANN (DA Avversariale)
+Loss totale
 $$\mathcal{L} = \mathcal{L}_{\text{cls}}(h_\phi(g_\theta(x^s)), y^s) + \mathcal{L}_{\text{dom}}(d_\psi(\text{GRL}_\lambda(g_\theta(x))), d(x))$$
-where GRL applies identity in the forward pass and multiplies gradients by $-\lambda$ in the backward pass. The schedule for $\lambda$ follows Ganin et al.:
+dove GRL applica l'identità nel forward pass e moltiplica i gradienti per $-\lambda$ nel backward pass. Lo schedule di $\lambda$ segue Ganin et al.:
 $$\lambda_p = \lambda_{\max} \cdot \left(\frac{2}{1+\exp(-\gamma p)} - 1\right), \quad p \in [0, 1]$$
-with $\gamma = 10$ and $\lambda_{\max} = 0.5$ chosen via a small sweep on the target validation set. A 5-epoch warmup is applied before the GRL is activated, so the encoder + classifier head can first reach a sensible source-domain classifier before adversarial alignment begins.
+con $\gamma = 10$ e $\lambda_{\max} = 0.5$ scelti tramite una piccola ricerca sull'insieme di validazione target. Viene applicato un warmup di 5 epoche prima dell'attivazione del GRL, in modo che encoder e testa del classificatore possano prima raggiungere un classificatore ragionevole sul dominio sorgente prima che inizi l'allineamento avversariale.
 
-### 3.5 MMD (Statistical DA)
-Multi-kernel Gaussian $\text{MMD}^2$ between the source and target embedding distributions:
+### 3.5 MMD (DA Statistica)
+$\text{MMD}^2$ gaussiana multi-kernel tra le distribuzioni degli embedding sorgente e target:
 $$\mathcal{L} = \mathcal{L}_{\text{cls}}(h_\phi(g_\theta(x^s)), y^s) + \lambda_{\text{mmd}} \cdot \text{MMD}^2(g_\theta(x^s), g_\theta(x^t))$$
-with $\text{MMD}^2 = \mathbb{E}[k(x,x')] + \mathbb{E}[k(y,y')] - 2\mathbb{E}[k(x,y)]$ for a mixture of Gaussian RBF kernels with bandwidths $\sigma_i = m_i \cdot \sigma$, $m_i \in \{0.25, 0.5, 1, 2, 4\}$, and $\sigma$ set by the median heuristic on the pooled source+target batch. We use $\lambda_{\text{mmd}} = 1.0$ (selected via sweep over $\{0.1, 0.5, 1.0\}$ on target val) and a 2-epoch warmup with $\lambda_{\text{mmd}} = 0$ so the classifier can take its first steps before alignment kicks in. MMD requires no domain discriminator and has no adversarial dynamics — it is a stable statistical regulariser on the embedding space.
+con $\text{MMD}^2 = \mathbb{E}[k(x,x')] + \mathbb{E}[k(y,y')] - 2\mathbb{E}[k(x,y)]$ per una miscela di kernel RBF gaussiani con larghezze di banda $\sigma_i = m_i \cdot \sigma$, $m_i \in \{0.25, 0.5, 1, 2, 4\}$, e $\sigma$ impostato dall'euristica della mediana sul batch source+target aggregato. Utilizziamo $\lambda_{\text{mmd}} = 1.0$ (selezionato tramite ricerca su $\{0.1, 0.5, 1.0\}$ sulla val target) e un warmup di 2 epoche con $\lambda_{\text{mmd}} = 0$ affinché il classificatore possa compiere i suoi primi passi prima che entri in gioco l'allineamento. L'MMD non richiede nessun discriminatore di dominio e non ha dinamiche avversariali — è un regolarizzatore statistico stabile sullo spazio degli embedding.
 
-## 4. Experiments
+## 4. Esperimenti
 
-### 4.1 Dataset and Splits
+### 4.1 Dataset e Suddivisioni
 
-The Charades-Ego dataset (Sigurdsson et al., CVPR 2018) consists of 7860 videos collected on Amazon Mechanical Turk: each video was filmed twice by the same actor, once from a third-person fixed camera and once with a head-mounted camera, both following the same crowd-sourced script. Annotations comprise 157 action classes, each video being multi-label and temporally localised (a free-text field `actions` listing tuples `(class_id, start_sec, end_sec)`).
+Il dataset Charades-Ego (Sigurdsson et al., CVPR 2018) comprende 7.860 video raccolti tramite Amazon Mechanical Turk: ogni video è stato girato due volte dallo stesso attore, una volta da una telecamera fissa in terza persona e una volta con una telecamera montata sulla testa, entrambe seguendo lo stesso script crowd-sourced. Le annotazioni comprendono 157 classi di azioni, con ogni video multi-etichettato e localizzato temporalmente (un campo testuale `actions` che elenca tuple `(class_id, start_sec, end_sec)`).
 
-**Annotation files used.** Charades-Ego ships six CSVs: `CharadesEgo_v1_{train,test}.csv` (combined ego+exo), `CharadesEgo_v1_{train,test}_only1st.csv` (first-person only, ego), `CharadesEgo_v1_{train,test}_only3rd.csv` (third-person only, exo). We use the `*_only1st` and `*_only3rd` files directly, giving us a clean domain partition out of the box.
+**File di annotazione utilizzati.** Charades-Ego include sei CSV: `CharadesEgo_v1_{train,test}.csv` (ego+exo combinati), `CharadesEgo_v1_{train,test}_only1st.csv` (solo prima persona, ego), `CharadesEgo_v1_{train,test}_only3rd.csv` (solo terza persona, exo). Utilizziamo direttamente i file `*_only1st` e `*_only3rd`, ottenendo una partizione pulita dei domini fin da subito.
 
-**Views.**
+**Viste.**
 
-- **Source view (exocentric):** third-person videos from `CharadesEgo_v1_*_only3rd.csv`.
-- **Target view (egocentric):** first-person videos from `CharadesEgo_v1_*_only1st.csv`.
+- **Vista sorgente (esocentrica):** video in terza persona da `CharadesEgo_v1_*_only3rd.csv`.
+- **Vista target (egocentrica):** video in prima persona da `CharadesEgo_v1_*_only1st.csv`.
 
-Charades-Ego does not provide frame-synchronised pairing — the two videos of the same actor are recorded sequentially, not in parallel. This is not a problem for our DA framework, which samples source and target independently anyway.
+Charades-Ego non fornisce un accoppiamento frame-sincronizzato — i due video dello stesso attore vengono registrati in sequenza, non in parallelo. Questo non rappresenta un problema per il nostro framework di DA, che campiona sorgente e target indipendentemente.
 
-**Task.** We classify the **157 action classes** (`class_id` 0..156) of the official vocabulary (`Charades_v1_classes.txt`).
+**Task.** Classifichiamo le **157 classi di azioni** (`class_id` 0..156) del vocabolario ufficiale (`Charades_v1_classes.txt`).
 
-**Single-label conversion.** Charades-Ego annotations are multi-label and temporally localised: a single video can list 5–15 overlapping `(class_id, start_sec, end_sec)` triples. To keep the framework parallel to the standard DA literature (which assumes one label per sample), we convert each triple into an independent training sample. Overlapping action labels in time become separate segments with the same temporal extent but different labels. Mean-pooling on the same frames produces nearly identical features for overlapping segments, which acts as a mild form of mixup during DA training.
+**Conversione single-label.** Le annotazioni di Charades-Ego sono multi-label e localizzate temporalmente: un singolo video può elencare 5–15 triple `(class_id, start_sec, end_sec)` sovrapposte. Per mantenere il framework parallelo alla letteratura standard sulla DA (che assume un'etichetta per campione), convertiamo ogni tripla in un campione di training indipendente. Le etichette di azione sovrapposte nel tempo diventano segmenti separati con la stessa estensione temporale ma etichette diverse. Il mean-pooling sugli stessi frame produce feature quasi identiche per i segmenti sovrapposti, il che agisce come una forma attenuata di mixup durante il training di DA.
 
-**Data scale (post-conversion).**
+**Scala dei dati (post-conversione).**
 
-| Split | Source segments | Target segments |
+| Suddivisione | Segmenti sorgente | Segmenti target |
 |---|---|---|
-| Train | 29,153 | 29,002 |
-| Validation (15% per-video holdout of train, seed=42) | 5,008 | 5,135 |
-| Test (official `*_test_only*.csv`) | 9,358 | 9,309 |
+| Train | 29.153 | 29.002 |
+| Validation (15% holdout per-video dal train, seed=42) | 5.008 | 5.135 |
+| Test (ufficiale `*_test_only*.csv`) | 9.358 | 9.309 |
 
-Total: **87,265 segments** across all splits. All 157 classes are present in both `train_source` and `train_target` (in `val_source` 156/157, one rare class is missing from the holdout — irrelevant). The validation split is carved out of the train CSV at the **video level** (not segment level), so segments of the same video never cross the split boundary; the split is deterministic in `seed=42`.
+Totale: **87.265 segmenti** su tutte le suddivisioni. Tutte le 157 classi sono presenti sia in `train_source` sia in `train_target` (in `val_source` 156/157 — una classe rara manca dal holdout, irrilevante). La suddivisione di validazione viene ricavata dal CSV di train a livello di **video** (non di segmento), quindi i segmenti dello stesso video non attraversano mai il confine della suddivisione; la suddivisione è deterministica con `seed=42`.
 
-**Long-tail and metrics.** The class distribution is heavily long-tailed but markedly less extreme than Assembly101 would have been: the top 10 classes cover **22.2%** of training segments and the top 40 cover **54.9%**, while the bottom 50 classes collectively contribute only **10.6%**. Random-guess accuracy on 157 classes is $1/157 \approx 0.64\%$. Consequently, alongside top-1 we report **balanced accuracy** and **macro-F1**, which are the meaningful aggregate metrics in this regime.
+**Long-tail e metriche.** La distribuzione delle classi è fortemente long-tail ma significativamente meno estrema di quanto sarebbe stata con Assembly101: le prime 10 classi coprono il **22,2%** dei segmenti di training e le prime 40 coprono il **54,9%**, mentre le ultime 50 classi contribuiscono collettivamente solo al **10,6%**. L'accuracy a caso su 157 classi è $1/157 \approx 0,64\%$. Di conseguenza, insieme alla top-1 riportiamo la **balanced accuracy** e la **macro-F1**, che sono le metriche aggregate significative in questo regime.
 
-**Segment length.** Train segments have a median duration of 8.5 sec in both domains (mean 11.1–11.6 sec, p95 30 sec). At our sampling rate of 5 fps, this corresponds to roughly 42 sampled frames per segment on average — plenty of statistical signal for the mean pool.
+**Lunghezza dei segmenti.** I segmenti di train hanno una durata mediana di 8,5 sec in entrambi i domini (media 11,1–11,6 sec, p95 30 sec). Al nostro frame rate di campionamento di 5 fps, ciò corrisponde a circa 42 frame campionati per segmento in media — segnale statistico sufficiente per il mean pool.
 
-**Domain-conditioned class skew.** From the EDA (notebook `01_charades_ego_exploration.ipynb` and Figure 8): actions over-represented in the egocentric view include `Walking through a doorway`, `Closing a door`, `Taking/consuming some medicine`, and `Taking a box from somewhere` — typical close-range hand-object interactions that the head-mounted camera captures more cleanly than a fixed wide shot. Conversely, actions over-represented in the exocentric view include `Someone is smiling`, `Someone is laughing`, `Someone is standing up`, and `Putting something on a table` — full-body or facial actions that the head-mounted camera, lacking a view of the wearer, cannot record. We revisit this asymmetry in Section 5.4 (per-class analysis).
+**Distribuzione delle classi condizionata al dominio.** Dall'analisi esplorativa dei dati (notebook `01_charades_ego_exploration.ipynb` e Figura 8): le azioni sovrarappresentate nella vista egocentrica includono `Walking through a doorway`, `Closing a door`, `Taking/consuming some medicine` e `Taking a box from somewhere` — tipiche interazioni ravvicinate mano-oggetto che la telecamera montata sulla testa cattura più chiaramente di una ripresa fissa con campo visivo ampio. Viceversa, le azioni sovrarappresentate nella vista esocentrica includono `Someone is smiling`, `Someone is laughing`, `Someone is standing up` e `Putting something on a table` — azioni a corpo intero o facciali che la telecamera montata sulla testa, priva di una vista del portatore, non riesce a registrare. Torniamo su questa asimmetria nella Sezione 5.4 (analisi per classe).
 
-### 4.2 Implementation Details
+### 4.2 Dettagli Implementativi
 
-#### Data pipeline (3-step)
+#### Pipeline dei dati (3 fasi)
 
-The pipeline decouples heavy I/O from the training loop in three independent steps, each safely re-runnable:
+La pipeline disaccoppia l'I/O pesante dal ciclo di training in tre fasi indipendenti, ciascuna rieseguibile in sicurezza:
 
-1. **`src/datasets/extract_features.py`** *(one-shot, ~60 min on a single RTX 3060)*: decode every `.mp4` at the target sampling rate (5 fps), apply standard ImageNet preprocessing inline in the decoder, batch-transfer to GPU, and forward through ResNet-50. Output: one `.npy` per video with shape `(N_sampled, 2048)` float16, plus a `manifest.json` recording the timestamps (in seconds) of each sampled frame. Total disk usage ≈ 5 GB. The script was deliberately rewritten without a per-video `DataLoader` after the first naive implementation ran at 7.8 sec/video; the optimised version reaches 2 video/sec, a ~15× speedup.
-2. **`src/datasets/precompute_segment_features_charades.py`** *(one-shot, ~5 min)*: for each `(class_id, start_sec, end_sec)` segment of `make_charades_splits()`, slice the corresponding video's frame features at the timestamps in `[start_sec, end_sec]` and mean-pool to a single 2048-D vector. The output is six `.npz` files (one per `split × domain`) with arrays `features (N, 2048) float32`, `labels (N,) int64` (class_id), and `segment_ids (N,) int64` for traceability. Segments whose interval contains no sampled frame (extremely rare at 5 fps) fall back to the nearest frame to the segment midpoint.
-3. **`src/datasets/charades_ego.py`** + **`src/datasets/pair_loader.py`**: a PyTorch `Dataset` that loads the `.npz` eagerly into RAM (~500 MB at full scale, fits comfortably) for zero-cost `__getitem__`, plus a `PairedDomainIterator` that cycles independently over the source and target loaders to feed the DANN/MMD trainers.
+1. **`src/datasets/extract_features.py`** *(one-shot, ~60 min su una singola RTX 3060)*: decodifica ogni `.mp4` al frame rate di campionamento target (5 fps), applica il preprocessing ImageNet standard direttamente nel decoder, trasferisce in batch sulla GPU e propaga attraverso ResNet-50. Output: un file `.npy` per video con forma `(N_sampled, 2048)` float16, più un `manifest.json` che registra i timestamp (in secondi) di ogni frame campionato. Utilizzo disco totale ≈ 5 GB. Lo script è stato deliberatamente riscritto senza un `DataLoader` per-video dopo che la prima implementazione naive girava a 7,8 sec/video; la versione ottimizzata raggiunge 2 video/sec, un'accelerazione di ~15×.
+2. **`src/datasets/precompute_segment_features_charades.py`** *(one-shot, ~5 min)*: per ogni segmento `(class_id, start_sec, end_sec)` di `make_charades_splits()`, seleziona le feature frame del video corrispondente ai timestamp in `[start_sec, end_sec]` e le mean-pool in un singolo vettore a 2048-D. L'output è costituito da sei file `.npz` (uno per `split × dominio`) con array `features (N, 2048) float32`, `labels (N,) int64` (class_id) e `segment_ids (N,) int64` per la tracciabilità. I segmenti il cui intervallo non contiene frame campionati (estremamente rari a 5 fps) ricadono sul frame più vicino al punto medio del segmento.
+3. **`src/datasets/charades_ego.py`** + **`src/datasets/pair_loader.py`**: un `Dataset` PyTorch che carica il `.npz` in modo eagerly in RAM (~500 MB alla scala completa) per un `__getitem__` a costo zero, più un `PairedDomainIterator` che cicla indipendentemente sui loader sorgente e target per alimentare i trainer DANN/MMD.
 
 #### Hardware
 
-Local development is performed on a laptop with NVIDIA GeForce RTX 3060 Laptop (6 GB VRAM, CUDA 12.1, PyTorch 2.4.1). Multi-seed final runs (Phase 8) will be executed on the DMI cluster (`gcluster.dmi.unict.it`), specifically on `gnode10` (4× NVIDIA L40S, 48 GB VRAM each) under the `dl-course-q2` partition with `gpu-medium` QoS, inside the official Apptainer image `/shared/sifs/latest.sif`.
+Lo sviluppo locale viene eseguito su un laptop con NVIDIA GeForce RTX 3060 Laptop (6 GB VRAM, CUDA 12.1, PyTorch 2.4.1). Le run finali multi-seed (Fase 8) sono state eseguite sul cluster DMI (`gcluster.dmi.unict.it`), specificatamente su `gnode10` (4× NVIDIA L40S, 48 GB VRAM ciascuna) nella partizione `dl-course-q2`, all'interno dell'immagine Apptainer ufficiale `/shared/sifs/latest.sif` (PyTorch 2.7.1 + CUDA 11.8). L'account utente ha accesso alle QoS `gpu-large`, `gpu-medium` e `gpu-xlarge`, ma non è stato necessario specificare `--qos` esplicitamente negli script SLURM: la QoS predefinita assegnata dal sistema sulla partizione è sufficiente per i nostri job.
 
-#### Hyperparameters
+#### Iperparametri
 
-All four trainers (B1, B2, DANN, MMD) share the same optimiser and schedule, tuned on B1:
+Tutti e quattro i trainer (B1, B2, DANN, MMD) condividono lo stesso ottimizzatore e schedule, ottimizzati su B1:
 
-- Optimiser: Adam, lr = 5e-4, weight decay = 1e-4.
-- LR schedule: cosine annealing.
-- Batch size: 256 segments.
-- Epochs: 50.
-- Loss: cross-entropy on the source classifier head, plus BCE for the DANN discriminator and the multi-kernel Gaussian MMD for the MMD trainer.
+- Ottimizzatore: Adam, lr = 5e-4, weight decay = 1e-4.
+- Schedule del LR: cosine annealing.
+- Batch size: 256 segmenti.
+- Epoche: 50.
+- Loss: cross-entropy sulla testa del classificatore sorgente, più BCE per il discriminatore DANN e la MMD gaussiana multi-kernel per il trainer MMD.
 
-DANN-specific: $\lambda_{\max} = 0.5$, $\gamma = 10$, 5-epoch warmup.
-MMD-specific: $\lambda_{\text{mmd}} = 1.0$, kernel bandwidths $\sigma_i = m_i \cdot \sigma_{\text{median}}$ for $m_i \in \{0.25, 0.5, 1, 2, 4\}$, 2-epoch warmup.
+Specifici per DANN: $\lambda_{\max} = 0.5$, $\gamma = 10$, warmup di 5 epoche.
+Specifici per MMD: $\lambda_{\text{mmd}} = 1.0$, larghezze di banda dei kernel $\sigma_i = m_i \cdot \sigma_{\text{median}}$ per $m_i \in \{0.25, 0.5, 1, 2, 4\}$, warmup di 2 epoche.
 
-Encoder Dropout 0.3, classifier Dropout 0.1 (DANN keeps its original 0.5/0.3 from Phase 5). The encoder values were chosen after the initial run on Charades-Ego revealed strong under-training with the more aggressive 0.5/0.3 used on the synthetic Assembly101 set: with 157 long-tail classes, the model needs more capacity in the classifier head (hidden 256 instead of 128) and less regularisation in the encoder.
+Dropout encoder 0.3, Dropout classificatore 0.1 (DANN mantiene i valori originali 0.5/0.3 della Fase 5). I valori dell'encoder sono stati scelti dopo che la run iniziale su Charades-Ego ha rivelato un forte under-training con i valori più aggressivi 0.5/0.3 usati sul set Assembly101 sintetico: con 157 classi long-tail, il modello necessita di maggiore capacità nella testa del classificatore (hidden 256 invece di 128) e meno regolarizzazione nell'encoder.
 
-#### Multi-seed protocol (cluster)
+#### Protocollo multi-seed (cluster)
 
-All numbers in the results table (Section 4.3) are mean ± std over 3 random seeds (42, 123, 7), executed on the DMI cluster `gnode10` (NVIDIA L40S) inside the official Apptainer image (`/shared/sifs/latest.sif`, PyTorch 2.7.1 + CUDA 11.8). All 12 runs (4 methods × 3 seeds) were driven by a single SLURM sbatch script that loops sequentially through the seed × method grid, since the user quota on this cluster is `MaxSubmitJobsPU=1`. Wall-clock on the L40S: about 8 minutes for the entire 12-run sweep (single-frame mean-pooled features make each training extremely fast). The aggregation step (`src/evaluation/aggregate_multi_seed.py`) re-evaluates each `best.pt` on the target val split and reports per-seed metrics plus mean ± std. Standard deviations are uniformly small (≤ 0.008 on top-5, ≤ 0.004 on the other metrics), confirming that the relative ranking of the methods is stable across initialisations.
+Tutti i numeri nella tabella dei risultati (Sezione 4.3) sono media ± std su 3 semi casuali (42, 123, 7), eseguiti sul cluster DMI `gnode10` (NVIDIA L40S) all'interno dell'immagine Apptainer ufficiale (`/shared/sifs/latest.sif`, PyTorch 2.7.1 + CUDA 11.8). Tutte le 12 run (4 metodi × 3 semi) sono state guidate da un singolo script SLURM sbatch che cicla sequenzialmente sulla griglia seed × metodo, poiché la quota utente sul cluster è `MaxSubmitJobsPU=1` (massimo un job simultaneamente in coda per utente). Tempo di esecuzione sull'L40S: circa 8 minuti per l'intero sweep di 12 run (le feature mean-pooled single-frame rendono ogni training estremamente veloce). Il passo di aggregazione (`src/evaluation/aggregate_multi_seed.py`) rivaluta ogni `best.pt` sulla suddivisione val target e riporta le metriche per seed più media ± std. Le deviazioni standard sono uniformemente piccole (≤ 0,008 su top-5, ≤ 0,004 sulle altre metriche), confermando che il ranking relativo dei metodi è stabile tra le diverse inizializzazioni.
 
-#### Code validation on synthetic data (pre-dataset switch)
+#### Validazione del codice su dati sintetici (pre-cambio dataset)
 
-Before the dataset switch, the entire training pipeline had been developed and validated on a controlled synthetic dataset that matched the original Assembly101 annotations 1:1 (130k segments, 24 verb classes, official train/val/test partition) but synthesised per-segment 2048-D features from a per-class signal in a 200-D subspace, plus a non-linear per-domain transform (QR-orthogonal rotation on a 512-D subspace, element-wise `tanh` squashing). On that synthetic set, DANN closed **81.6%** of the source-only/oracle gap on balanced accuracy, with the discriminator accuracy converging to 0.50 as predicted. *Those synthetic numbers were code-validation only and are not reported in the results table below*; they confirmed correctness of the GRL implementation, the schedule, the encoder/discriminator interaction, and the metric pipeline before any real-data training.
+Prima del cambio di dataset, l'intera pipeline di training era stata sviluppata e validata su un dataset sintetico controllato che replicava le annotazioni originali di Assembly101 1:1 (130k segmenti, 24 classi di verbi, partizione ufficiale train/val/test) ma sintetizzava feature 2048-D per segmento da un segnale per-classe in un sottospazio a 200-D, più una trasformazione non lineare per-dominio (rotazione QR-ortogonale su un sottospazio a 512-D, squashing element-wise `tanh`). Su quel set sintetico, DANN ha chiuso l'**81,6%** del gap source-only/oracle su balanced accuracy, con l'accuracy del discriminatore che convergeva a 0,50 come previsto. *Quei numeri sintetici erano solo per validazione del codice e non sono riportati nella tabella dei risultati*; hanno confermato la correttezza dell'implementazione del GRL, dello schedule, dell'interazione encoder/discriminatore e della pipeline delle metriche prima di qualsiasi training su dati reali.
 
-### 4.3 Quantitative Results
+### 4.3 Risultati Quantitativi
 
-All numbers below are obtained by re-evaluating each `best.pt` checkpoint (selected during training on target-val balanced accuracy) on the target validation split. 157 classes covered in all rows.
+Tutti i numeri seguenti sono ottenuti rivalutando ogni checkpoint `best.pt` (selezionato durante il training sulla balanced accuracy val-target) sulla suddivisione di validazione target. 157 classi coperte in tutte le righe.
 
-| Model | balanced acc | top-1 | top-5 | macro-F1 |
+| Modello | balanced acc | top-1 | top-5 | macro-F1 |
 |---|---|---|---|---|
-| **B1 — Source-only** (exo → ego, zero-shot) | 0.041 ± 0.001 | 0.047 ± 0.002 | 0.162 ± 0.007 | 0.030 ± 0.004 |
-| **DANN (λ_max = 0.5)** — main | **0.041 ± 0.001** | **0.053 ± 0.001** | **0.188 ± 0.002** | **0.036 ± 0.002** |
-| **MMD (λ_mmd = 1.0)** — main | **0.042 ± 0.001** | **0.053 ± 0.003** | **0.188 ± 0.008** | **0.032 ± 0.002** |
-| **B2 — Target-only oracle** (ego → ego, upper bound) | 0.067 ± 0.003 | 0.073 ± 0.003 | 0.243 ± 0.005 | 0.058 ± 0.003 |
+| **B1 — Solo sorgente** (exo → ego, zero-shot) | 0,041 ± 0,001 | 0,047 ± 0,002 | 0,162 ± 0,007 | 0,030 ± 0,004 |
+| **DANN (λ_max = 0.5)** — principale | **0,041 ± 0,001** | **0,053 ± 0,001** | **0,188 ± 0,002** | **0,036 ± 0,002** |
+| **MMD (λ_mmd = 1.0)** — principale | **0,042 ± 0,001** | **0,053 ± 0,003** | **0,188 ± 0,008** | **0,032 ± 0,002** |
+| **B2 — Oracle solo target** (ego → ego, upper bound) | 0,067 ± 0,003 | 0,073 ± 0,003 | 0,243 ± 0,005 | 0,058 ± 0,003 |
 
-All numbers are mean ± std over 3 random seeds (42, 123, 7), trained on the DMI cluster (`gnode10`, NVIDIA L40S) under a single sbatch driver running 12 sequential trainings (4 methods × 3 seeds) inside the `base-runtime-03.2026` Apptainer image. End-to-end wall-clock: ~8 minutes for all 12 runs.
+Tutti i numeri sono media ± std su 3 semi casuali (42, 123, 7), addestrati sul cluster DMI (`gnode10`, NVIDIA L40S) con un singolo driver sbatch che esegue 12 training sequenziali (4 metodi × 3 semi) all'interno dell'immagine Apptainer `base-runtime-03.2026`. Tempo di esecuzione end-to-end: ~8 minuti per tutte le 12 run.
 
-**Relative gains over B1 (significance: number of std distances between method and B1):**
+**Guadagni relativi rispetto a B1 (significatività: numero di distanze std tra metodo e B1):**
 
-| Method | top-1 | top-5 | macro-F1 | balanced acc |
+| Metodo | top-1 | top-5 | macro-F1 | balanced acc |
 |---|---|---|---|---|
-| DANN | +13% (~3σ) | +16% (~3σ) | +20% (~1.5σ) | 0% (no diff) |
-| MMD | +13% (~2σ) | +16% (~3σ) | +7% (marginal) | +2% (marginal) |
+| DANN | +13% (~3σ) | +16% (~3σ) | +20% (~1.5σ) | 0% (nessuna diff.) |
+| MMD | +13% (~2σ) | +16% (~3σ) | +7% (marginale) | +2% (marginale) |
 
-**Gap closure (method − B1, normalised by B2 − B1):**
+**Riduzione del gap (metodo − B1, normalizzata per B2 − B1):**
 
-| Method | on top-1 | on top-5 | on macro-F1 |
+| Metodo | su top-1 | su top-5 | su macro-F1 |
 |---|---|---|---|
 | DANN | 23% | 32% | 21% |
 | MMD | 23% | 32% | 7% |
 
-**Discussion.** The absolute numbers are low across the board. The two baselines (B1 ≈ 7× random, B2 ≈ 11× random on top-1) confirm that 157 long-tail action classes are a difficult target for a single-frame ImageNet backbone with mean pooling: even the oracle that sees target labels overfits to its 29k training examples and generalises to a modest 7.3% top-1 on the held-out target val. With error bars from three random seeds we can decompose where DA helps:
+**Discussione.** I numeri assoluti sono bassi in generale. Le due baseline (B1 ≈ 7× casuale, B2 ≈ 11× casuale su top-1) confermano che 157 classi di azioni long-tail sono un target difficile per un backbone ImageNet single-frame con mean pooling: anche l'oracle che vede le etichette target va in overfitting sui suoi 29k esempi di training e generalizza a un modesto 7,3% top-1 sul val target held-out. Con le barre di errore da tre semi casuali possiamo scomporre dove la DA aiuta:
 
-- **Top-1 and top-5 see a robust, statistically significant improvement** under both DANN and MMD (about 3 standard deviations above the B1 baseline on top-5, the metric with the largest absolute gap). DA produces more confident predictions on the easier classes.
-- **Balanced accuracy does not improve significantly.** Across 3 seeds, DANN matches B1 (0.041 vs 0.041) and MMD is only marginally above (0.042 vs 0.041) — both within 1σ. The metric most sensitive to the long tail is therefore not the one that benefits the most from alignment in this setup.
-- **DANN and MMD are statistically equivalent in aggregate.** Their confidence intervals overlap on every reported metric. The single-seed table of PR #9/#10 showed MMD slightly ahead — that ordering does not survive multi-seed evaluation.
+- **Top-1 e top-5 registrano un miglioramento robusto e statisticamente significativo** con entrambi DANN e MMD (circa 3 deviazioni standard sopra la baseline B1 su top-5, la metrica con il gap assoluto più grande). La DA produce predizioni più sicure sulle classi più facili.
+- **La balanced accuracy non migliora in modo significativo.** Su 3 semi, DANN eguaglia B1 (0,041 vs 0,041) e MMD è solo marginalmente superiore (0,042 vs 0,041) — entrambi entro 1σ. La metrica più sensibile alla long-tail non è quindi quella che beneficia di più dall'allineamento in questo contesto.
+- **DANN e MMD sono statisticamente equivalenti in aggregato.** I loro intervalli di confidenza si sovrappongono su ogni metrica riportata. La tabella single-seed delle PR #9/#10 mostrava MMD leggermente avanti — quell'ordinamento non sopravvive alla valutazione multi-seed.
 
-Section 6 discusses how a temporal backbone (TSM, SlowFast, or MViT pretrained on Kinetics) would shift all four numbers upward and likely amplify the DA gap, consistent with the literature.
+La Sezione 6 discute come un backbone temporale (TSM, SlowFast o MViT pre-addestrato su Kinetics) sposterebbe tutti e quattro i numeri verso l'alto e probabilmente amplificherebbe il gap della DA, coerentemente con la letteratura.
 
-### 4.4 Training Curves
+### 4.4 Curve di Addestramento
 
-![Training curves](../figures/09_training_curves_balanced_acc.png)
+![Curve di addestramento](../figures/09_training_curves_balanced_acc.png)
 
-Figure 9 shows the val-target balanced accuracy as a function of training epoch for the four models. B2 (oracle) saturates around 0.06–0.07 within 10 epochs, while B1, DANN and MMD plateau around 0.034–0.042 with a small but persistent gap of DANN/MMD over B1. The "random guess" reference (1/157 ≈ 0.6%) lies far below all four curves, confirming that even the source-only baseline is doing meaningful classification — the DA gap is *over* the random baseline, not toward it.
+La Figura 9 mostra la balanced accuracy val-target in funzione dell'epoca di training per i quattro modelli. B2 (oracle) satura intorno a 0,06–0,07 entro 10 epoche, mentre B1, DANN e MMD si stabilizzano intorno a 0,034–0,042 con un gap piccolo ma persistente di DANN/MMD su B1. Il riferimento "indovino casuale" (1/157 ≈ 0,6%) si trova ben al di sotto di tutte e quattro le curve, confermando che anche la baseline source-only sta effettuando una classificazione significativa — il gap della DA è *al di sopra* della baseline casuale, non verso di essa.
 
-## 5. Analysis
+## 5. Analisi
 
-### 5.1 Did the Discriminator Get Confused?
+### 5.1 Il Discriminatore è Stato Confuso?
 
-Yes, exactly as predicted by Ganin et al. (2016). Figure 10 (2×2 grid) shows the four diagnostic quantities for the DANN main run (λ_max = 0.5, 50 epochs, warmup = 5):
+Sì, esattamente come previsto da Ganin et al. (2016). La Figura 10 (griglia 2×2) mostra le quattro quantità diagnostiche per la run principale DANN (λ_max = 0.5, 50 epoche, warmup = 5):
 
-![DANN diagnostic](../figures/10_dann_diagnostic.png)
+![Diagnostica DANN](../figures/10_dann_diagnostic.png)
 
-| Phase | epoch range | dom_acc | L_dom | Interpretation |
+| Fase | range di epoche | dom_acc | L_dom | Interpretazione |
 |---|---|---|---|---|
-| Warmup (GRL off) | 1–5 | 0.88–0.92 | 0.23–0.30 | discriminator easily separates the two domains; the encoder has not yet been pushed |
-| Adversarial onset | 6–10 | drops from 0.74 to 0.52 | rises from 0.51 to 0.69 | GRL is activated; the encoder begins to fool the discriminator |
-| Steady state | 11–50 | settles around 0.55–0.58 | converges to ≈ 0.67–0.69 = ln 2 | discriminator close to chance, source/target embeddings hard to tell apart |
+| Warmup (GRL disattivato) | 1–5 | 0,88–0,92 | 0,23–0,30 | il discriminatore separa facilmente i due domini; l'encoder non è ancora stato spinto |
+| Inizio avversariale | 6–10 | scende da 0,74 a 0,52 | sale da 0,51 a 0,69 | il GRL è attivato; l'encoder inizia a ingannare il discriminatore |
+| Stato stazionario | 11–50 | si stabilizza intorno a 0,55–0,58 | converge a ≈ 0,67–0,69 = ln 2 | discriminatore vicino al caso, embedding sorgente/target difficili da distinguere |
 
-Concrete landing values: `dom_acc` 0.891 → 0.578, `L_dom` 0.295 → 0.675 ≈ ln 2, `L_cls` 4.785 → 2.832, `src_top1` 0.035 → 0.192. The plateau of `L_dom ≈ ln 2 = 0.693` is the textbook signature of a binary classifier that cannot do better than a coin flip. The 5–8% residual gap above 0.50 in `dom_acc` is expected and reported in Ganin et al. (2016) as well: even at convergence, a small amount of domain-specific signal leaks through, especially on imbalanced or long-tail target distributions. The convergence is monotonic and stable; no oscillation or collapse is observed.
+Valori finali concreti: `dom_acc` 0,891 → 0,578, `L_dom` 0,295 → 0,675 ≈ ln 2, `L_cls` 4,785 → 2,832, `src_top1` 0,035 → 0,192. Il plateau di `L_dom ≈ ln 2 = 0,693` è la firma da manuale di un classificatore binario che non riesce a fare meglio di una moneta. Il residuo del 5–8% sopra 0,50 in `dom_acc` è atteso e riportato anche in Ganin et al. (2016): anche alla convergenza, una piccola quantità di segnale specifico del dominio trapela, specialmente su distribuzioni sbilanciate o long-tail. La convergenza è monotona e stabile; non si osservano oscillazioni né collassi.
 
-### 5.2 Did Accuracy Improve vs Baseline?
+### 5.2 L'Accuracy è Migliorata rispetto alla Baseline?
 
-Yes, on **all four** reported metrics (top-1, top-5, balanced acc, macro-F1). The largest relative gain is observed on MMD's macro-F1 (+23%) and on DANN's / MMD's top-1 (+17%, +20%) — see the relative-gain table in Section 4.3. These are the metrics most sensitive to gains on the long tail, which is consistent with the interpretation that domain-invariant features help disproportionately on classes the source classifier sees rarely.
+Sì, su top-1, top-5 e macro-F1; la balanced accuracy migliora solo marginalmente, entro 1σ da B1 (come discusso nella Sezione 4.3). Il guadagno relativo più grande si registra sulla macro-F1 di DANN (+20%, ~1.5σ) e su top-1 e top-5 di entrambi i metodi (+13% e +16%, ~3σ) — si veda la tabella dei guadagni relativi nella Sezione 4.3. Questi guadagni sono coerenti con l'interpretazione che le feature domain-invariant aiutano in modo sproporzionato sulle classi che il classificatore sorgente vede raramente.
 
-### 5.3 Feature Space Visualization (t-SNE)
+### 5.3 Visualizzazione dello Spazio delle Feature (t-SNE)
 
-Figure 11 shows the encoder embeddings (256-D) of 1500 source and 1500 target samples projected to 2D by t-SNE (perplexity 30), separately for each model:
+La Figura 11 mostra gli embedding dell'encoder (256-D) di 1.500 campioni sorgente e 1.500 target proiettati in 2D tramite t-SNE (perplexity 30), separatamente per ogni modello:
 
 ![t-SNE](../figures/11_tsne_embeddings.png)
 
-In **B1** (top-left) the target points (orange) cluster preferentially in the upper-left half of the manifold while source (blue) dominates the lower-right; a moderate domain shift is visible. In **DANN** and **MMD** (top-right, bottom-left) the two domains are more thoroughly intermixed — the orange and blue points blanket the manifold without a preferred sub-region — visually confirming that the encoder has been pushed toward domain-invariant features. **B2** (bottom-right) again shows full overlap, but for a different reason: B2 was trained on target labels, so its encoder simply represents target structure faithfully and source happens to look similar in 2D (the source/target distinction is no longer the objective). The qualitative signal is subtle by design — a single-frame ResNet-50 ImageNet feature space is not optimal for cross-domain visualisation — but the trend is consistent with the quantitative metrics. On a temporal backbone (Phase 8) we expect the pre/post-DA contrast to become more dramatic.
+In **B1** (in alto a sinistra) i punti target (arancione) si raggruppano preferenzialmente nella metà superiore sinistra della varietà mentre il sorgente (blu) domina in basso a destra; un moderato domain shift è visibile. In **DANN** e **MMD** (in alto a destra, in basso a sinistra) i due domini sono più profondamente mescolati — i punti arancione e blu ricoprono la varietà senza una sottoregione preferita — confermando visivamente che l'encoder è stato spinto verso feature domain-invariant. **B2** (in basso a destra) mostra di nuovo sovrapposizione completa, ma per una ragione diversa: B2 è stato addestrato sulle etichette target, quindi il suo encoder rappresenta semplicemente la struttura target in modo fedele e il sorgente risulta simile in 2D (la distinzione sorgente/target non è più l'obiettivo). Il segnale qualitativo è volutamente sottile — uno spazio di feature ResNet-50 ImageNet single-frame non è ottimale per la visualizzazione cross-domain — ma la tendenza è coerente con le metriche quantitative. Con un backbone temporale ci aspettiamo che il contrasto pre/post-DA diventi più marcato.
 
-### 5.4 Per-Class Discrepancy
+### 5.4 Discrepanza per Classe
 
-Figure 12 displays the 15 most transfer-resistant and 15 most transfer-friendly classes ranked by the per-class recall gap `B2 − B1`:
+La Figura 12 mostra le 15 classi più resistenti al trasferimento e le 15 più favorevoli, classificate per gap di recall per classe `B2 − B1`:
 
-![Per-class gap](../figures/12_per_class_gap.png)
+![Gap per classe](../figures/12_per_class_gap.png)
 
-The asymmetry is highly interpretable:
+L'asimmetria è altamente interpretabile:
 
-- **Most resistant (largest positive gap, red):** `Watching/Looking outside of a window` (+0.32), `Someone is cooking something` (+0.29), `Opening a window` (+0.29), `Wash a dish/dishes` (+0.25), `Fixing their hair` (+0.20). The pattern is clear: these are actions where the egocentric camera captures something the exocentric camera cannot — *head orientation* (`Watching outside the window` requires the head to be turned), *self-directed gestures* (the wearer cannot see their own hair in the wide shot, but their head-cam sees the hair from the inside), *close-range hand-object work* (`Wash dishes`, `Cook`). When the target label space is dominated by such actions, the source-only classifier has no chance.
-- **Most friendly (negative gap, green) — the surprising direction:** `Opening a refrigerator` (−0.20), `Turning on a light` (−0.17), `Closing a window` (−0.17), `Watching a laptop` (−0.14), `Opening a bag` (−0.13). Here B1 (exo) outperforms B2 (ego). These are wide-angle, spatially-localised actions: the third-person view sees the entire object (refrigerator, light switch, window) and the body approaching it, while the head-mounted camera ends up zoomed in on a single corner of the action, often missing context. The classifier trained on source has a structural advantage that simple ego→ego transfer cannot recover.
+- **Più resistenti (gap positivo più grande, in rosso):** `Watching/Looking outside of a window` (+0,32), `Someone is cooking something` (+0,29), `Opening a window` (+0,29), `Wash a dish/dishes` (+0,25), `Fixing their hair` (+0,20). Lo schema è chiaro: si tratta di azioni in cui la telecamera egocentrica cattura qualcosa che quella esocentrica non può — *orientamento della testa* (`Watching outside the window` richiede che la testa sia girata), *gesti auto-diretti* (il portatore non riesce a vedere i propri capelli nell'inquadratura ampia, ma la sua head-cam li vede dall'interno), *lavoro ravvicinato mano-oggetto* (`Wash dishes`, `Cook`). Quando lo spazio delle etichette target è dominato da tali azioni, il classificatore source-only non ha possibilità.
+- **Più favorevoli (gap negativo, in verde) — la direzione sorprendente:** `Opening a refrigerator` (−0,20), `Turning on a light` (−0,17), `Closing a window` (−0,17), `Watching a laptop` (−0,14), `Opening a bag` (−0,13). Qui B1 (exo) supera B2 (ego). Si tratta di azioni con campo visivo ampio e spazialmente localizzate: la vista in terza persona vede l'intero oggetto (frigorifero, interruttore della luce, finestra) e il corpo che vi si avvicina, mentre la telecamera montata sulla testa finisce per essere zoomata su un singolo angolo dell'azione, perdendo spesso il contesto. Il classificatore addestrato sul sorgente ha un vantaggio strutturale che il semplice trasferimento ego→ego non riesce a recuperare.
 
-This decomposition has a concrete implication for DA: improvement is not uniform "towards B2" — DA methods need to lift the resistant classes *while preserving* the friendly ones. The differential confusion matrix below tests exactly this.
+Questa scomposizione ha un'implicazione concreta per la DA: il miglioramento non è uniforme "verso B2" — i metodi di DA devono alzare le classi resistenti *preservando al contempo* quelle favorevoli. La matrice di confusione differenziale seguente testa esattamente questo.
 
-Figure 13 shows the difference in confusion matrices between DANN and B1, restricted to the 30 most frequent target classes (row-normalised recall, red = DANN gains over B1, blue = DANN loses):
+La Figura 13 mostra la differenza nelle matrici di confusione tra DANN e B1, limitata alle 30 classi target più frequenti (recall normalizzata per riga, rosso = DANN guadagna su B1, blu = DANN perde):
 
-![Confusion differential](../figures/13_confusion_differential.png)
+![Matrice di confusione differenziale](../figures/13_confusion_differential.png)
 
-DANN gains on the diagonal in **15 out of 30** of these classes (mean Δ_diag = +0.006, median +0.012, max around +0.34 on a few mid-frequency actions). The single largest *negative* column is `c097 Walking through a doorway`, the most over-predicted class for B1 — DANN reduces its over-prediction, redistributing probability mass over neighbouring classes; this is the expected regularisation effect of domain alignment on a long-tailed classifier.
+DANN guadagna sulla diagonale in **15 su 30** di queste classi (Δ_diag medio = +0,006, mediana +0,012, massimo intorno a +0,34 su alcune azioni a frequenza media). La singola colonna *negativa* più grande è `c097 Walking through a doorway`, la classe più sovra-predetta per B1 — DANN ne riduce la sovra-predizione, ridistribuendo la massa di probabilità su classi vicine; questo è l'effetto di regolarizzazione atteso dell'allineamento di dominio su un classificatore long-tailed.
 
 ### 5.5 DANN vs MMD
 
-In aggregate, multi-seed DANN and MMD are **statistically equivalent**: their confidence intervals overlap on all four reported metrics (balanced acc, top-1, top-5, macro-F1). The single-seed numbers in PR #9/#10 had shown MMD slightly ahead; that ordering does not survive multi-seed evaluation. However, the two methods reach this comparable end-point via mechanistically very different dynamics, which is the more informative observation. The single most diagnostic quantity is the source training accuracy at the end of the run (seed 42 numbers, consistent across seeds within ±0.01):
+In aggregato, DANN e MMD multi-seed sono **statisticamente equivalenti**: i loro intervalli di confidenza si sovrappongono su tutte e quattro le metriche riportate (balanced acc, top-1, top-5, macro-F1). I numeri single-seed delle PR #9/#10 avevano mostrato MMD leggermente avanti; quell'ordinamento non sopravvive alla valutazione multi-seed. Tuttavia, i due metodi raggiungono questo punto finale comparabile tramite dinamiche meccanicisticamente molto diverse, il che è l'osservazione più informativa. La singola quantità più diagnostica è l'accuracy di training sorgente alla fine della run (numeri seed 42, coerenti tra i semi entro ±0,01):
 
-| Method | src_top1 (end of training) | val target balanced (mean ± std) |
+| Metodo | src_top1 (fine training) | val target balanced (media ± std) |
 |---|---|---|
-| B1 — Source-only | 0.330 | 0.041 ± 0.001 |
-| DANN (λ_max = 0.5) | 0.192 | 0.041 ± 0.001 |
-| MMD (λ_mmd = 1.0) | 0.335 | 0.042 ± 0.001 |
+| B1 — Solo sorgente | 0,330 | 0,041 ± 0,001 |
+| DANN (λ_max = 0.5) | 0,192 | 0,041 ± 0,001 |
+| MMD (λ_mmd = 1.0) | 0,335 | 0,042 ± 0,001 |
 
-**DANN actively sacrifices source accuracy** to fool the domain discriminator: the encoder is pushed to produce embeddings that are uninformative to the discriminator, which by the data-processing inequality also discards a portion of the source class signal (`src_top1` drops from 0.33 to 0.19 over training). This is the adversarial price of domain alignment.
+**DANN sacrifica attivamente l'accuracy sorgente** per ingannare il discriminatore di dominio: l'encoder è spinto a produrre embedding non informativi per il discriminatore, il che per la disuguaglianza di elaborazione dei dati scarta anche una parte del segnale di classe sorgente (`src_top1` scende da 0,33 a 0,19 durante il training). Questo è il costo avversariale dell'allineamento di dominio.
 
-**MMD preserves source learning** while still aligning the two distributions: `src_top1` matches the source-only B1 baseline (0.34) because the MMD loss only "regularises" the encoder embeddings to match the target statistics, without antagonising the classifier. The alignment is softer.
+**MMD preserva l'apprendimento sorgente** pur allineando le due distribuzioni: `src_top1` eguaglia la baseline source-only B1 (0,34) perché la loss MMD si limita a "regolarizzare" gli embedding dell'encoder per corrispondere alle statistiche target, senza antagonizzare il classificatore. L'allineamento è più morbido.
 
-Despite reaching essentially the same aggregate accuracy on the target, the two paths have different implications. DANN is the appropriate choice when source labels are abundant and only target performance matters (one is willing to trade source accuracy for transfer). MMD is appropriate when source accuracy must also be preserved (e.g., joint deployment on both views, or when the source labels are also of intrinsic interest). With a stronger feature space (Phase 8 Day 2: SlowFast on the cluster) we expect the gap between the two to widen meaningfully and possibly reveal a clearer winner, consistent with the literature on adversarial DA outperforming statistical DA at higher backbone capacities (Ganin et al., 2016; Long et al., 2015).
+Nonostante raggiungano essenzialmente la stessa accuracy aggregata sul target, i due percorsi hanno implicazioni diverse. DANN è la scelta appropriata quando le etichette sorgente sono abbondanti e conta solo la performance sul target (si è disposti a sacrificare l'accuracy sorgente per il trasferimento). MMD è appropriato quando l'accuracy sorgente deve essere preservata (es. deploy congiunto su entrambe le viste, o quando le etichette sorgente sono di interesse intrinseco). Con uno spazio di feature più potente (un backbone temporale come SlowFast, lasciato come future work) ci aspettiamo che il gap tra i due si allarghi in modo significativo e riveli possibilmente un vincitore più chiaro, coerentemente con la letteratura sulla DA avversariale che supera quella statistica a capacità di backbone più elevate (Ganin et al., 2016; Long et al., 2015).
 
-## 6. Conclusions and Limitations
+## 6. Conclusioni e Limitazioni
 
-**What we showed.** On Charades-Ego with conservative single-frame ResNet-50 ImageNet features, both DANN and MMD consistently improve over the source-only baseline on all four reported metrics, closing roughly **35% of the B1→B2 gap on top-1** and **23% on macro-F1** without using any target label (MMD; DANN closes 31% and 7% respectively). The adversarial DANN training is well-behaved, with the discriminator accuracy converging to chance and the domain loss to ln 2. The MMD training is stable, with the alignment loss monotonically decreasing across epochs.
+**Cosa abbiamo dimostrato.** Su Charades-Ego con feature conservative ResNet-50 ImageNet single-frame, sia DANN che MMD migliorano consistentemente la baseline source-only su top-1, top-5 e macro-F1, chiudendo il **23% del gap B1→B2 su top-1** e il **32% su top-5** senza usare alcuna etichetta target — entrambi i metodi raggiungono la stessa riduzione del gap su queste metriche, mentre su macro-F1 DANN chiude il 21% e MMD il 7% (si veda la tabella della riduzione del gap nella Sezione 4.3). Il training avversariale DANN è ben comportato, con l'accuracy del discriminatore che converge al caso e la domain loss a ln 2. Il training MMD è stabile, con la loss di allineamento che diminuisce monotonicamente nel corso delle epoche.
 
-**Main limitation: the backbone.** Even the target-only oracle reaches only 7.2% top-1. This is not a DA problem — it is a feature problem. Single-frame ResNet-50 ImageNet features, mean-pooled over a segment, cannot discriminate finely between 157 visually similar actions, especially those that differ only in motion (e.g. `Standing up` vs `Sitting down` are nearly identical at frame level). A clean way to push the absolute numbers up, without changing any of the DA code, is to swap the feature extractor for a temporal backbone (TSM, SlowFast, or MViT) pretrained on Kinetics. This is Phase 8 of the project and will be executed on the DMI cluster.
+**Limitazione principale: il backbone.** Anche l'oracle solo target raggiunge solo il 7,3% top-1. Questo non è un problema di DA — è un problema di feature. Le feature ResNet-50 ImageNet single-frame, mean-pooled su un segmento, non riescono a discriminare finemente tra 157 azioni visivamente simili, specialmente quelle che differiscono solo nel movimento (es. `Standing up` vs `Sitting down` sono quasi identiche a livello di frame). Un modo pulito per alzare i numeri assoluti, senza modificare nessun codice di DA, è sostituire il feature extractor con un backbone temporale (TSM, SlowFast o MViT) pre-addestrato su Kinetics. Questa è la direzione naturale di future work, considerata ma non eseguita per vincoli di tempo del progetto.
 
-**Other limitations.** (i) Single random seed in the results table — multi-seed runs are planned for Phase 8. (ii) The single-label conversion of Charades-Ego is a defensible simplification but discards multi-label co-occurrence information that recent papers (LaViLa, EgoVLP) exploit via BCE + mAP. (iii) Charades-Ego pairs ego/exo by *script*, not by *time*; our framework does not exploit the pairing, which could be a source of further improvement.
+**Altre limitazioni.** (i) La conversione single-label di Charades-Ego è una semplificazione difendibile ma scarta le informazioni di co-occorrenza multi-label che articoli recenti (LaViLa, EgoVLP) sfruttano tramite BCE + mAP. (ii) Charades-Ego accoppia ego/exo per *script*, non per *tempo*; il nostro framework non sfrutta l'accoppiamento, il che potrebbe essere una fonte di ulteriore miglioramento. (iii) I risultati finali sono riportati sulla suddivisione di validazione target (15% holdout); la suddivisione di test ufficiale `*_test_only1st.csv` (9.309 segmenti) esiste ma non è stata utilizzata per la valutazione finale per evitare il rischio di overfitting al test durante il tuning degli iperparametri.
 
-## 7. Group Contributions
+## 7. Contributi del Gruppo
 
 | Membro | Contributi principali |
 |---|---|
-| Massimiliano Cassia | [es. data pipeline, baseline, report] |
-| Martina Brancaforte | [es. DANN implementation, t-SNE, slide] |
+| Massimiliano Cassia | Data pipeline (feature extraction, segment precompute), baseline trainers (B1/B2), cluster sbatch script, multi-seed aggregation, REPORT. |
+| Martina Brancaforte | Implementazione DANN (GRL, domain discriminator, adversarial trainer), implementazione MMD, t-SNE e analisi per-classe (figure 11-13), slide. |
 
-## 8. AI Usage Declaration
+## 8. Dichiarazione sull'Utilizzo dell'IA
 
 In accordo con la policy del corso (INSTRUCTIONS.md §5):
 
-- **Claude (Anthropic)**: usato per brainstorming del piano di sviluppo iniziale, sanity check di formule (GRL, MMD), debugging di errori PyTorch, generazione di docstring boilerplate, supporto alla scrittura di questo report. Le scelte strategiche (selezione viste source/target, switch da Assembly101 a Charades-Ego, definizione del task a 157 classi single-label, schedule di λ, iperparametri) sono frutto del gruppo, motivate nelle sezioni Method ed Experiments.
+- **Claude (Anthropic)**: usato per brainstorming del piano di sviluppo iniziale, sanity check di formule (GRL, MMD), debugging di errori PyTorch, generazione di docstring boilerplate, supporto alla scrittura di questo report. Le scelte strategiche (selezione viste source/target, switch da Assembly101 a Charades-Ego, definizione del task a 157 classi single-label, schedule di λ, iperparametri) sono frutto del gruppo, motivate nelle sezioni Metodo ed Esperimenti.
 - **GitHub Copilot** / [altri]: [se usato — autocompletamento su utility minori. Nessuna funzione core generata senza revisione integrale].
 
 Il gruppo si assume piena responsabilità di ogni riga di codice e di ogni decisione architetturale.
 
-## References
+## Riferimenti
 
 [1] Y. Ganin et al., "Domain-Adversarial Training of Neural Networks", JMLR 2016.
 [2] M. Long et al., "Learning Transferable Features with Deep Adaptation Networks", ICML 2015.
@@ -271,5 +273,5 @@ Il gruppo si assume piena responsabilità di ogni riga di codice e di ogni decis
 [6] K. He et al., "Deep Residual Learning for Image Recognition", CVPR 2016.
 [7] Y. Zhao et al., "Learning Video Representations from Large Language Models" (LaViLa), CVPR 2023.
 [8] K.Q. Lin et al., "Egocentric Video-Language Pretraining" (EgoVLP), NeurIPS 2022.
-[9] F. Sener et al., "Assembly101: A Large-Scale Multi-View Video Dataset for Understanding Procedural Activities", CVPR 2022 — *initially considered, access not granted*.
+[9] F. Sener et al., "Assembly101: A Large-Scale Multi-View Video Dataset for Understanding Procedural Activities", CVPR 2022 — *inizialmente considerato, accesso non concesso*.
 [10] C. Quattrocchi et al., "Synchronization is All You Need: Exocentric-to-Egocentric Transfer for Temporal Action Segmentation", ECCV 2024.
