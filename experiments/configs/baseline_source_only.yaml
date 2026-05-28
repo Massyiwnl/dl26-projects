@@ -1,0 +1,38 @@
+# B1 — Baseline source-only (exo → ego, zero-shot)
+# Trainer: src/training/trainer_supervised.py
+# Nota: questo file documenta gli iperparametri in forma dichiarativa.
+#       I trainer leggono i parametri via CLI flags, non da questo YAML.
+#       Per lanciare: vedi README.md (sezione Training) o slurm/run_multi_seed.sbatch
+
+experiment:
+  name: B1_source_only
+  method: supervised
+  description: Baseline addestrata solo su source (exo), valutata su target (ego)
+
+data:
+  train_npz: data/processed/charades-ego/segment_features/train_source.npz
+  val_npz: data/processed/charades-ego/segment_features/val_target.npz
+  num_classes: 157
+  feature_dim: 2048
+
+model:
+  encoder_hidden: [1024, 512]
+  embed_dim: 256
+  classifier_hidden: 256
+  encoder_dropout: 0.3
+  classifier_dropout: 0.1
+
+training:
+  epochs: 50
+  batch_size: 256
+  optimizer: adam
+  lr: 5.0e-4
+  weight_decay: 1.0e-4
+  lr_schedule: cosine_annealing
+  seeds: [42, 123, 7]
+
+results_multiseed:  # media ± std su 3 seed, val_target
+  balanced_accuracy: 0.041 ± 0.001
+  top1: 0.047 ± 0.002
+  top5: 0.162 ± 0.007
+  macro_f1: 0.030 ± 0.004
