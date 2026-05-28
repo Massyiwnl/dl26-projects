@@ -29,7 +29,7 @@ Implementare e confrontare tecniche di Domain Adaptation (DA) che trasferiscano 
 
 ### 1.4 Nota sulla scelta del dataset
 
-Il progetto era originariamente pianificato su **Assembly101** (Sener et al., CVPR 2022). L'accesso alla distribuzione ufficiale delle feature LMDB è stato ripetutamente negato dagli autori nel corso di due settimane. L'accesso alle annotazioni è stato concesso, ma non alle feature — e gli autori non hanno risposto alle richieste successive. Dopo aver consultato il docente del corso (Prof. Furnari, scambio email dell'11 maggio 2026), siamo passati a **Charades-Ego**, che (i) presenta una configurazione ego/exo appaiata nativa, (ii) è un benchmark cross-view standard nella letteratura recente (LaViLa CVPR'23, EgoVLP ICCV'23), e (iii) è scaricabile direttamente da Allen AI senza attese per la licenza. Il codice del framework di DA è dataset-agnostico al di sopra del `.npz` a livello di segmento, quindi il passaggio ha richiesto solo la modifica del parser, del feature extractor e dello script di precomputo dei segmenti.
+Il progetto era originariamente pianificato su **Assembly101** (Sener et al., CVPR 2022). L'accesso alla distribuzione ufficiale delle feature LMDB è stato ripetutamente negato dagli autori nel corso di due settimane. L'accesso alle annotazioni è stato concesso, ma non alle feature — e gli autori non hanno risposto alle richieste successive. Dopo aver consultato il docente del corso, siamo passati a **Charades-Ego**, che (i) presenta una configurazione ego/exo appaiata nativa, (ii) è un benchmark cross-view standard nella letteratura recente (LaViLa CVPR'23, EgoVLP ICCV'23), e (iii) è scaricabile direttamente da Allen AI senza attese per la licenza. Il codice del framework di DA è dataset-agnostico al di sopra del `.npz` a livello di segmento, quindi il passaggio ha richiesto solo la modifica del parser, del feature extractor e dello script di precomputo dei segmenti.
 
 ## 2. Lavori Correlati
 - Reti Neurali Domain-Adversariali (Ganin & Lempitsky, 2015; Ganin et al., 2016).
@@ -259,7 +259,6 @@ Nonostante raggiungano essenzialmente la stessa accuracy aggregata sul target, i
 In accordo con la policy del corso (INSTRUCTIONS.md §5):
 
 - **Claude (Anthropic)**: usato per brainstorming del piano di sviluppo iniziale, sanity check di formule (GRL, MMD), debugging di errori PyTorch, generazione di docstring boilerplate, supporto alla scrittura di questo report. Le scelte strategiche (selezione viste source/target, switch da Assembly101 a Charades-Ego, definizione del task a 157 classi single-label, schedule di λ, iperparametri) sono frutto del gruppo, motivate nelle sezioni Metodo ed Esperimenti.
-- **GitHub Copilot** / [altri]: [se usato — autocompletamento su utility minori. Nessuna funzione core generata senza revisione integrale].
 
 Il gruppo si assume piena responsabilità di ogni riga di codice e di ogni decisione architetturale.
 
