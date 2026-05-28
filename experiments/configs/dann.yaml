@@ -1,0 +1,51 @@
+# DANN — Domain-Adversarial Neural Network (adversarial DA)
+# Trainer: src/training/trainer_dann.py
+# Nota: file documentativo. I trainer usano CLI flags.
+
+experiment:
+  name: DANN_lambda05
+  method: dann
+  description: DA avversariale con Gradient Reversal Layer (Ganin et al. 2016)
+
+data:
+  train_source: data/processed/charades-ego/segment_features/train_source.npz
+  train_target: data/processed/charades-ego/segment_features/train_target.npz
+  val_target: data/processed/charades-ego/segment_features/val_target.npz
+  num_classes: 157
+  feature_dim: 2048
+
+model:
+  encoder_hidden: [1024, 512]
+  embed_dim: 256
+  classifier_hidden: 128
+  discriminator_hidden: [256, 128]
+  encoder_dropout: 0.5
+  classifier_dropout: 0.3
+  discriminator_dropout: 0.3
+
+dann:
+  lambda_max: 0.5         # coefficiente GRL massimo (selezionato su sweep {0.5, 1.0})
+  gamma: 10.0             # ripidità schedule sigmoide di Ganin
+  warmup_epochs: 5        # epoche con GRL disattivato prima dell'allineamento
+
+training:
+  epochs: 50
+  batch_size: 256
+  optimizer: adam
+  lr: 5.0e-4
+  weight_decay: 1.0e-4
+  lr_schedule: cosine_annealing
+  seeds: [42, 123, 7]
+
+results_multiseed:  # media ± std su 3 seed, val_target
+  balanced_accuracy: 0.041 ± 0.001
+  top1: 0.053 ± 0.001
+  top5: 0.188 ± 0.002
+  macro_f1: 0.036 ± 0.002
+
+diagnostics:  # convergenza adversarial (seed 42)
+  dom_acc_start: 0.891
+  dom_acc_end: 0.578
+  L_dom_end: 0.675       # ≈ ln 2 = 0.693
+  src_top1_start: 0.330
+  src_top1_end: 0.192    # DANN sacrifica src accuracy per fooling

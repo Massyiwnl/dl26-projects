@@ -1,0 +1,46 @@
+# MMD — Maximum Mean Discrepancy alignment (statistical DA)
+# Trainer: src/training/trainer_mmd.py
+# Nota: file documentativo. I trainer usano CLI flags.
+
+experiment:
+  name: MMD_lambda10
+  method: mmd
+  description: DA statistica con MMD multi-kernel Gaussian (Long et al. 2015)
+
+data:
+  train_source: data/processed/charades-ego/segment_features/train_source.npz
+  train_target: data/processed/charades-ego/segment_features/train_target.npz
+  val_target: data/processed/charades-ego/segment_features/val_target.npz
+  num_classes: 157
+  feature_dim: 2048
+
+model:
+  encoder_hidden: [1024, 512]
+  embed_dim: 256
+  classifier_hidden: 256
+  encoder_dropout: 0.3
+  classifier_dropout: 0.1
+
+mmd:
+  lambda_mmd: 1.0         # peso loss MMD (selezionato su sweep {0.1, 0.5, 1.0})
+  kernel_multipliers: [0.25, 0.5, 1.0, 2.0, 4.0]  # bandwidths = mediana × m_i
+  bandwidth_heuristic: median
+  warmup_epochs: 2        # epoche con lambda_mmd=0 prima dell'allineamento
+
+training:
+  epochs: 50
+  batch_size: 256
+  optimizer: adam
+  lr: 5.0e-4
+  weight_decay: 1.0e-4
+  lr_schedule: cosine_annealing
+  seeds: [42, 123, 7]
+
+results_multiseed:  # media ± std su 3 seed, val_target
+  balanced_accuracy: 0.042 ± 0.001
+  top1: 0.053 ± 0.003
+  top5: 0.188 ± 0.008
+  macro_f1: 0.032 ± 0.002
+
+diagnostics:  # MMD preserva src accuracy (seed 42)
+  src_top1_end: 0.335    # ≈ B1, alignment soft non antagonizza il classifier

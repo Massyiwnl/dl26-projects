@@ -1,0 +1,36 @@
+# B2 — Baseline target-only oracle (ego → ego, upper bound)
+# Trainer: src/training/trainer_supervised.py
+# Nota: file documentativo. I trainer usano CLI flags.
+
+experiment:
+  name: B2_target_only
+  method: supervised
+  description: Oracle addestrato su target (ego) con label, upper bound del task
+
+data:
+  train_npz: data/processed/charades-ego/segment_features/train_target.npz
+  val_npz: data/processed/charades-ego/segment_features/val_target.npz
+  num_classes: 157
+  feature_dim: 2048
+
+model:
+  encoder_hidden: [1024, 512]
+  embed_dim: 256
+  classifier_hidden: 256
+  encoder_dropout: 0.3
+  classifier_dropout: 0.1
+
+training:
+  epochs: 50
+  batch_size: 256
+  optimizer: adam
+  lr: 5.0e-4
+  weight_decay: 1.0e-4
+  lr_schedule: cosine_annealing
+  seeds: [42, 123, 7]
+
+results_multiseed:  # media ± std su 3 seed, val_target
+  balanced_accuracy: 0.067 ± 0.003
+  top1: 0.073 ± 0.003
+  top5: 0.243 ± 0.005
+  macro_f1: 0.058 ± 0.003
