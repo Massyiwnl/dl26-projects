@@ -53,14 +53,20 @@ Dominio sorgente $\mathcal{D}_s = \{(x_i^s, y_i^s)\}$ con feature esocentriche e
 
 ### 3.4 DANN (DA Avversariale)
 Loss totale
+
 $$\mathcal{L} = \mathcal{L}_{\text{cls}}(h_\phi(g_\theta(x^s)), y^s) + \mathcal{L}_{\text{dom}}(d_\psi(\text{GRL}_\lambda(g_\theta(x))), d(x))$$
+
 dove GRL applica l'identità nel forward pass e moltiplica i gradienti per $-\lambda$ nel backward pass. Lo schedule di $\lambda$ segue Ganin et al.:
+
 $$\lambda_p = \lambda_{\max} \cdot \left(\frac{2}{1+\exp(-\gamma p)} - 1\right), \quad p \in [0, 1]$$
+
 con $\gamma = 10$ e $\lambda_{\max} = 0.5$ scelti tramite una piccola ricerca sull'insieme di validazione target. Viene applicato un warmup di 5 epoche prima dell'attivazione del GRL, in modo che encoder e testa del classificatore possano prima raggiungere un classificatore ragionevole sul dominio sorgente prima che inizi l'allineamento avversariale.
 
 ### 3.5 MMD (DA Statistica)
 $\text{MMD}^2$ gaussiana multi-kernel tra le distribuzioni degli embedding sorgente e target:
+
 $$\mathcal{L} = \mathcal{L}_{\text{cls}}(h_\phi(g_\theta(x^s)), y^s) + \lambda_{\text{mmd}} \cdot \text{MMD}^2(g_\theta(x^s), g_\theta(x^t))$$
+
 con $\text{MMD}^2 = \mathbb{E}[k(x,x')] + \mathbb{E}[k(y,y')] - 2\mathbb{E}[k(x,y)]$ per una miscela di kernel RBF gaussiani con larghezze di banda $\sigma_i = m_i \cdot \sigma$, $m_i \in \{0.25, 0.5, 1, 2, 4\}$, e $\sigma$ impostato dall'euristica della mediana sul batch source+target aggregato. Utilizziamo $\lambda_{\text{mmd}} = 1.0$ (selezionato tramite ricerca su $\{0.1, 0.5, 1.0\}$ sulla val target) e un warmup di 2 epoche con $\lambda_{\text{mmd}} = 0$ affinché il classificatore possa compiere i suoi primi passi prima che entri in gioco l'allineamento. L'MMD non richiede nessun discriminatore di dominio e non ha dinamiche avversariali — è un regolarizzatore statistico stabile sullo spazio degli embedding.
 
 ## 4. Esperimenti
