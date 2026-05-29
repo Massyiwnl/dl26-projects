@@ -1,7 +1,7 @@
-"""Action classification head for DA on Assembly101.
+"""Action classification head for DA on Charades-Ego.
 
 Input: embedding produced by ``FeatureEncoder``.
-Output: logits over ``num_classes`` action classes (coarse verbs).
+Output: logits over ``num_classes`` action classes.
 """
 
 import torch
@@ -15,7 +15,7 @@ class ActionClassifier(nn.Module):
         self,
         embed_dim: int = 256,
         hidden_dim: int = 128,
-        num_classes: int = 17,
+        num_classes: int = 157,
         dropout: float = 0.3,
     ) -> None:
         """

@@ -58,7 +58,7 @@ def aggregate_metrics(
     Args:
         logits_or_pred: (N, C) logits if ``is_logits`` else (N,) predicted classes.
         target: (N,) ground-truth classes.
-        num_classes: total number of classes (24 for our task).
+        num_classes: total number of classes (157 for our task).
         is_logits: True if first arg is logits, False if already argmaxed.
     """
     if is_logits:
@@ -95,7 +95,7 @@ def aggregate_metrics(
     }
 
 
-def format_metrics_summary(metrics: dict, num_classes: int = 24) -> str:
+def format_metrics_summary(metrics: dict, num_classes: int = 157) -> str:
     """Human-readable summary string of the headline metrics."""
     lines = []
     if "top1" in metrics:

@@ -1,6 +1,6 @@
-"""Feature encoder for DA on Assembly101 TSM features.
+"""Feature encoder for DA on Charades-Ego segment features.
 
-Input: per-segment TSM feature vector (typically 2048-D).
+Input: per-segment ResNet-50 feature vector (typically 2048-D).
 Output: lower-dimensional embedding (typically 256-D).
 
 This is the SHARED encoder of the DANN architecture: the action classifier

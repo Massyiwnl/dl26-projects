@@ -27,8 +27,7 @@ This file provides:
     - make_charades_splits: convenience function that loads all 4 splits
       (train_source/target, val_source/target, test_source/target) and
       returns a dict of DataFrames ready for feature extraction.
-    - CharadesEgoSegmentDataset: PyTorch Dataset over .npz segment files,
-      identical interface to Assembly101SegmentDataset.
+    - CharadesEgoSegmentDataset: PyTorch Dataset over .npz segment files.
 """
 
 from __future__ import annotations
@@ -119,12 +118,13 @@ def make_charades_splits(
     }
 
     # --- train and val (carved from train via per-video split) ---
-    rng = np.random.default_rng(seed)
     for domain in ('source', 'target'):
         df = load_charades_split(csvs[('train', domain)])
-        # determine video-level split (consistent across domains via the same seed
-        # would not be appropriate because the video sets are different per domain;
-        # we just split each domain independently with the same seed for reproducibility)
+        # Split at the video level (not segment level) so segments of the same
+        # video never cross the split boundary. Source and target have disjoint
+        # video sets, so each domain is split independently; we offset the seed
+        # by domain (seed for source, seed+1 for target) so the two splits are
+        # reproducible yet independent.
         unique_videos = df['id'].unique()
         rng_local = np.random.default_rng(seed if domain == 'source' else seed + 1)
         shuffled = rng_local.permutation(unique_videos)
@@ -145,9 +145,8 @@ def make_charades_splits(
 class CharadesEgoSegmentDataset(Dataset):
     """In-memory dataset of pre-extracted Charades-Ego segment-level features.
 
-    Identical interface to Assembly101SegmentDataset; the only structural
-    difference is num_classes==157 instead of 24, but it's inferred from
-    the labels at load time.
+    num_classes is fixed to 157 (the Charades-Ego action vocabulary); a given
+    split may not cover all of them, which is fine for evaluation.
     """
 
     def __init__(self, npz_path: str | Path, return_segment_id: bool = False) -> None:

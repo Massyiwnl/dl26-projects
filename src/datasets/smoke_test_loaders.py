@@ -1,13 +1,13 @@
-"""Smoke test for the Assembly101 segment Dataset and the paired DA loader.
+"""Smoke test for the Charades-Ego segment Dataset and the paired DA loader.
 
 Verifies:
   1. Each .npz loads correctly and has consistent (features, labels, segment_ids).
   2. DataLoader yields tensors of the expected shape and dtype.
   3. PairedDomainIterator yields one source+target batch per step,
      respects the requested steps_per_epoch, and cycles correctly.
-  4. The 24 classes are present in source and target train splits.
+  4. num_classes is 157 (Charades-Ego action vocabulary) on the train splits.
 
-Run from repo root:
+Run from repo root (after the .npz segment features have been precomputed):
     python -m src.datasets.smoke_test_loaders
 """
 
@@ -18,29 +18,29 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 
-from src.datasets.assembly101 import Assembly101SegmentDataset
+from src.datasets.charades_ego import CharadesEgoSegmentDataset
 from src.datasets.pair_loader import PairedDomainIterator
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SEG_DIR = REPO_ROOT / "data" / "processed" / "segment_features"
+SEG_DIR = REPO_ROOT / "data" / "processed" / "charades-ego" / "segment_features"
 
 
 def main() -> None:
-    print("Smoke test: Assembly101SegmentDataset + PairedDomainIterator\n")
+    print("Smoke test: CharadesEgoSegmentDataset + PairedDomainIterator\n")
 
     # 1. Datasets
-    train_src = Assembly101SegmentDataset(SEG_DIR / "train_source.npz")
-    train_tgt = Assembly101SegmentDataset(SEG_DIR / "train_target.npz")
-    val_src = Assembly101SegmentDataset(SEG_DIR / "val_source.npz")
+    train_src = CharadesEgoSegmentDataset(SEG_DIR / "train_source.npz")
+    train_tgt = CharadesEgoSegmentDataset(SEG_DIR / "train_target.npz")
+    val_src = CharadesEgoSegmentDataset(SEG_DIR / "val_source.npz")
 
     print(f"  train_source: {len(train_src):>7} segments, {train_src.num_classes} classes, dim={train_src.feature_dim}")
     print(f"  train_target: {len(train_tgt):>7} segments, {train_tgt.num_classes} classes, dim={train_tgt.feature_dim}")
     print(f"  val_source:   {len(val_src):>7} segments")
 
     assert train_src.feature_dim == 2048
-    assert train_src.num_classes == 24
-    assert train_tgt.num_classes == 24
+    assert train_src.num_classes == 157
+    assert train_tgt.num_classes == 157
     print("[PASS] Dataset shapes/classes correct")
 
     # 2. Class counts (long-tail check)

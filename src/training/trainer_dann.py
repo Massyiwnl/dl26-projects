@@ -1,5 +1,5 @@
 """DANN trainer (Domain-Adversarial Neural Network) for exo->ego DA on
-Assembly101 segment-level features.
+Charades-Ego segment-level features.
 
 Pipeline at training time:
     1. Sample a labelled source batch (B_s features + verb labels).
@@ -18,11 +18,12 @@ gets a head-start before the discriminator pushes back.
 
 CLI:
     python -m src.training.trainer_dann \
-        --train-source data/processed/segment_features/train_source.npz \
-        --train-target data/processed/segment_features/train_target.npz \
-        --val-target   data/processed/segment_features/val_target.npz \
-        --output-dir   experiments/checkpoints/SYNTH_dann \
-        --epochs 30 --batch-size 256 --gamma 10 --lambda-max 1.0
+        --train-source data/processed/charades-ego/segment_features/train_source.npz \
+        --train-target data/processed/charades-ego/segment_features/train_target.npz \
+        --val-target   data/processed/charades-ego/segment_features/val_target.npz \
+        --output-dir   experiments/checkpoints/DANN_lambda05 \
+        --epochs 50 --batch-size 256 --lr 5e-4 --weight-decay 1e-4 \
+        --gamma 10 --lambda-max 0.5 --warmup-epochs 5
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from src.datasets.assembly101 import Assembly101SegmentDataset
+from src.datasets.charades_ego import CharadesEgoSegmentDataset
 from src.datasets.pair_loader import PairedDomainIterator
 from src.evaluation.metrics import aggregate_metrics, format_metrics_summary
 from src.models.dann import DANNModel
@@ -146,14 +147,14 @@ def main() -> None:
     ap.add_argument("--train-target", type=Path, required=True)
     ap.add_argument("--val-target", type=Path, required=True)
     ap.add_argument("--output-dir", type=Path, required=True)
-    ap.add_argument("--epochs", type=int, default=30)
-    ap.add_argument("--warmup-epochs", type=int, default=2)
+    ap.add_argument("--epochs", type=int, default=50)
+    ap.add_argument("--warmup-epochs", type=int, default=5)
     ap.add_argument("--batch-size", type=int, default=256)
-    ap.add_argument("--lr", type=float, default=1e-4)
-    ap.add_argument("--weight-decay", type=float, default=5e-4)
+    ap.add_argument("--lr", type=float, default=5e-4)
+    ap.add_argument("--weight-decay", type=float, default=1e-4)
     ap.add_argument("--embed-dim", type=int, default=256)
     ap.add_argument("--gamma", type=float, default=10.0)
-    ap.add_argument("--lambda-max", type=float, default=1.0)
+    ap.add_argument("--lambda-max", type=float, default=0.5)
     ap.add_argument("--num-workers", type=int, default=0)
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
@@ -165,9 +166,9 @@ def main() -> None:
     print(f"Device: {device}\n")
 
     # ---- data ----
-    src_ds = Assembly101SegmentDataset(args.train_source)
-    tgt_ds = Assembly101SegmentDataset(args.train_target)
-    val_ds = Assembly101SegmentDataset(args.val_target)
+    src_ds = CharadesEgoSegmentDataset(args.train_source)
+    tgt_ds = CharadesEgoSegmentDataset(args.train_target)
+    val_ds = CharadesEgoSegmentDataset(args.val_target)
     num_classes = max(src_ds.num_classes, tgt_ds.num_classes, val_ds.num_classes)
 
     print(f"Train source: {len(src_ds):,} segments")

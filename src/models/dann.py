@@ -39,7 +39,7 @@ class DANNModel(nn.Module):
         encoder_hidden: Sequence[int] = (1024, 512),
         embed_dim: int = 256,
         cls_hidden: int = 128,
-        num_classes: int = 17,
+        num_classes: int = 157,
         disc_hidden: Sequence[int] = (256, 128),
         encoder_dropout: float = 0.5,
         cls_dropout: float = 0.3,

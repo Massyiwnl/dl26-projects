@@ -16,10 +16,10 @@ The trainer:
 
 CLI:
     python -m src.training.trainer_supervised \
-        --train-npz data/processed/segment_features/train_source.npz \
-        --val-npz   data/processed/segment_features/val_target.npz \
+        --train-npz data/processed/charades-ego/segment_features/train_source.npz \
+        --val-npz   data/processed/charades-ego/segment_features/val_target.npz \
         --output-dir experiments/checkpoints/baseline_source_only \
-        --epochs 30 --batch-size 256
+        --epochs 50 --batch-size 256 --lr 5e-4 --weight-decay 1e-4
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from src.datasets.assembly101 import Assembly101SegmentDataset
+from src.datasets.charades_ego import CharadesEgoSegmentDataset
 from src.evaluation.metrics import aggregate_metrics, format_metrics_summary
 from src.models.classifier import ActionClassifier
 from src.models.encoder import FeatureEncoder
@@ -105,10 +105,10 @@ def main() -> None:
     ap.add_argument("--train-npz", type=Path, required=True)
     ap.add_argument("--val-npz", type=Path, required=True)
     ap.add_argument("--output-dir", type=Path, required=True)
-    ap.add_argument("--epochs", type=int, default=30)
+    ap.add_argument("--epochs", type=int, default=50)
     ap.add_argument("--batch-size", type=int, default=256)
-    ap.add_argument("--lr", type=float, default=1e-4)
-    ap.add_argument("--weight-decay", type=float, default=5e-4)
+    ap.add_argument("--lr", type=float, default=5e-4)
+    ap.add_argument("--weight-decay", type=float, default=1e-4)
     ap.add_argument("--embed-dim", type=int, default=256)
     ap.add_argument("--num-workers", type=int, default=0)
     ap.add_argument("--seed", type=int, default=42)
@@ -122,8 +122,8 @@ def main() -> None:
     print(f"Device: {device}\n")
 
     # ---- data ----
-    train_ds = Assembly101SegmentDataset(args.train_npz)
-    val_ds = Assembly101SegmentDataset(args.val_npz)
+    train_ds = CharadesEgoSegmentDataset(args.train_npz)
+    val_ds = CharadesEgoSegmentDataset(args.val_npz)
     num_classes = max(train_ds.num_classes, val_ds.num_classes)
     print(f"Train npz : {args.train_npz.name}  -> {len(train_ds):,} segments")
     print(f"Val   npz : {args.val_npz.name}    -> {len(val_ds):,} segments")
