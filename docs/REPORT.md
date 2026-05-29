@@ -90,7 +90,7 @@ Charades-Ego non fornisce un accoppiamento frame-sincronizzato — i due video d
 | Validation (15% holdout per-video dal train, seed=42) | 5.008 | 5.135 |
 | Test (ufficiale `*_test_only*.csv`) | 9.358 | 9.309 |
 
-Totale: **87.265 segmenti** su tutte le suddivisioni. Tutte le 157 classi sono presenti sia in `train_source` sia in `train_target` (in `val_source` 156/157 — una classe rara manca dal holdout, irrilevante). La suddivisione di validazione viene ricavata dal CSV di train a livello di **video** (non di segmento), quindi i segmenti dello stesso video non attraversano mai il confine della suddivisione; la suddivisione è deterministica con `seed=42`.
+Totale: **86,965 segmenti** su tutte le suddivisioni. Tutte le 157 classi sono presenti sia in `train_source` sia in `train_target` (in `val_source` 156/157 — una classe rara manca dal holdout, irrilevante). La suddivisione di validazione viene ricavata dal CSV di train a livello di **video** (non di segmento), quindi i segmenti dello stesso video non attraversano mai il confine della suddivisione; la suddivisione è deterministica con `seed=42`.
 
 **Long-tail e metriche.** La distribuzione delle classi è fortemente long-tail ma significativamente meno estrema di quanto sarebbe stata con Assembly101: le prime 10 classi coprono il **22,2%** dei segmenti di training e le prime 40 coprono il **54,9%**, mentre le ultime 50 classi contribuiscono collettivamente solo al **10,6%**. L'accuracy a caso su 157 classi è $1/157 \approx 0,64\%$. Di conseguenza, insieme alla top-1 riportiamo la **balanced accuracy** e la **macro-F1**, che sono le metriche aggregate significative in questo regime.
 
