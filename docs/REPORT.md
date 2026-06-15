@@ -257,8 +257,8 @@ Nonostante raggiungano essenzialmente la stessa accuracy aggregata sul target, i
 
 | Membro | Contributi principali |
 |---|---|
-| Massimiliano Cassia | Baseline trainers (B1/B2),  implementazione MMD, t-SNE e analisi per-classe (figure 11-13), cluster sbatch script, REPORT, slide. |
-| Martina Brancaforte | Data pipeline (feature extraction, segment precompute), Implementazione DANN (GRL, domain discriminator, adversarial trainer), cluster sbatch script, multi-seed aggregation, REPORT, slide. |
+| Massimiliano Cassia | Baseline trainers (B1/B2),  implementazione MMD, t-SNE e analisi per-classe (figure 11-13), multi-seed aggregation, cluster sbatch script, REPORT, slide. |
+| Martina Brancaforte | Data pipeline (feature extraction, segment precompute), Implementazione DANN (GRL, domain discriminator, adversarial trainer), cluster sbatch script, REPORT, slide. |
 
 ## 8. Dichiarazione sull'Utilizzo dell'IA
 
